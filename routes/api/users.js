@@ -38,13 +38,13 @@ app.get('/', async (req, res) => {
     res.send(data);
 });
 
-app.post('/', (req, res) => {
-    // console.log(req);
-    const datosRecibidos = req.body;
-    console.log('Datos recibidos:', datosRecibidos);
-    // Aquí procesas los datos recibidos
-    res.status(200).send({ mensaje: 'Datos recibidos correctamente' });
-});
+// app.post('/login', (req, res) => {
+//     console.log(req);
+//     const datosRecibidos = req.body;
+//     console.log('Datos recibidos:', datosRecibidos);
+//     // Aquí procesas los datos recibidos
+//     res.status(200).send({ mensaje: 'Datos recibidos correctamente' });
+// });
 
 // exporta el módulo del enrutador para que el archivo server.js pueda usarlo
 module.exports = app;
