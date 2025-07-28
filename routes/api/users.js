@@ -4,8 +4,7 @@ const sql = require('mssql');
 const app = express.Router ( );
 var config = require ('./../../conexion_bd');
 
-
-app.use(express.json()); // Para analizar JSON
+app.use(express.json()); // Middleware para analizar JSON
 app.use(express.urlencoded({ extended: true })); // Para analizar datos de formularios
 
 async function conectarYConsultar() {
