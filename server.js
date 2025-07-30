@@ -4,6 +4,7 @@ const express = require ( 'express' );
 const app = express ();
 const sql = require('mssql');
 var config = require ('./conexion_bd');
+const nodemailer = require('nodemailer');
 
 
 //Configuración de CORS
@@ -31,6 +32,46 @@ app.post('/login', async (req, res) => {
     console.log(result);
     res.send(result);
 });
+
+async function enviarCorreo() {
+  // Crear un transportador (configuración para Gmail)
+  let transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: '', //Correo
+      pass: ''//Contraseña
+    }
+  });
+
+  // Definir el correo
+  let mailOptions = {
+    from: 'jarodriguez@cinasa.com.mx', // Remitente
+    to: 'jarodriguez@cinasa.com.mx', // Destinatario
+    subject: 'Prueba de email', // Asunto
+    text: 'Este es un correo de prueba.', // Cuerpo del correo (texto plano)
+    html: '<p>Contenido del correo en HTML</p>' // Cuerpo del correo (HTML)
+  };
+
+  try {
+    // Enviar el correo
+    let info = await transporter.sendMail(mailOptions);
+    console.log('Correo enviado: ' + info.response);
+  } catch (error) {
+    console.error('Error al enviar el correo:', error);
+  }
+}
+
+app.post('/form',(req, res) => {
+    const datosRecibidos = req.body;
+    console.log('Datos del frontend:', datosRecibidos);
+    const enviarMail = datosRecibidos[0].Estatus;
+    if(enviarMail == 'Alta'){
+        enviarCorreo();
+        res.send('Correo enviado con exito');
+    }else{
+        res.send('Correo no enviado');
+    }
+})
 
 async function conectarYConsultar(paramUser, paramPass) {
     try {
