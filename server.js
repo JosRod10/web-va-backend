@@ -7,6 +7,8 @@ const sql = require('mssql');
 var config = require ('./conexion_bd');
 const nodemailer = require('nodemailer');
 
+const cron = require('node-cron');
+
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv'); // Para cargar el secreto desde variables de entorno
 
@@ -26,9 +28,52 @@ app.use(bodyParser.json({ limit: '50mb' }));
 
 app.use(express.json()); // Middleware para analizar JSON
 // Ejemplo que define una ruta en
- app.get ( '/' , ( req, res ) => { 
+app.get ( '/' , ( req, res ) => { 
     res.send ( '<h1>Backend con Node js y Express js</h1>' ); 
 });
+
+// La función que quieres ejecutar
+async function consultaVacacionesVencer() {
+  // console.log('¡Hoy 10:03 Consultando Vacaciones por vencer!');
+      try {
+        await sql.connect(config);
+        console.log('Conexión a SQL Server exitosa');
+        const request = new sql.Request();
+     
+        const result = await request.query("SELECT * FROM colaboradores_julio_2025 WHERE Dias_disponibles != 0 AND DATEADD(month, -2, DATEADD(year, 1, Fecha_de_alta)) = CAST(GETDATE() AS DATE)");
+
+        if(result){
+          // console.log(result.recordset);
+          // await enviarCorreoInsertado(paramUno, paramTres, paramCuatro, paramCinco, permiso1, permiso2, permiso3, permiso4, paramSiete, paramTrece);
+          for(let colaborador of result.recordset){
+            await enviarCorreoVacacionesVencer(colaborador.Nombre_completo, colaborador.Dias_disponibles);
+          }
+        }else{
+          console.log('No hay colaborador con vacaciones a vencer este día.');
+        }
+        // Cerrar la conexión
+        await sql.close();
+        console.log('Conexión cerrada');
+        // console.log(data);
+        // return result;
+      } catch (err) {
+        console.error('Error al conectar o consultar:', err);
+      }
+}
+
+// Programa la ejecución de la función
+// "0 9 * * *" significa:
+// 0: minuto 0
+// 9: hora 9
+// *: día del mes (todos)
+// *: mes (todos)
+// *: día de la semana (todos)
+cron.schedule('0 9 * * *', consultaVacacionesVencer, {
+  scheduled: true,
+  timezone: "America/Mexico_City" // O la zona horaria de tu preferencia
+});
+
+// console.log('El programador de tareas ha sido iniciado.');
 
 // Obtén el secreto desde las variables de entorno ----------------------------------------------------------------------->
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -80,17 +125,6 @@ app.post('/login-0', async (req, res) => {
 
 async function enviarCorreo(nombre, dias, de, a, permiso1, permiso2, permiso3, permiso4, motivo, tipo_solicitud) {
  
-  // Crear transportador
-  // var tipoSolicitud = '';
-  //  if(motivo.includes(': ')){
-  //     tipoSolicitud = motivo.includes('Permiso:')? 'Permiso' : motivo.includes('Pago tiempo por tiempo:')? 'Pago tiempo por tiempo' : 'Vacaciones';
-  //     // var tipoSiguiente = tipoSolicitud;
-  //     motivo = tipoSolicitud == 'Vacaciones'? motivo.substring(12,500) : tipoSolicitud == 'Permiso'? motivo.substring(9,500) : tipoSolicitud == 'Pago tiempo por tiempo'? motivo.substring(24,500) : motivo;
-  //  }else{
-  //     // tipoSolicitud = tipoSiguiente;
-  //     motivo = motivo;
-  //  }
-
   let transporter = nodemailer.createTransport({
     host: 'mail.cinasa.com.mx',
     port: 587,
@@ -109,6 +143,60 @@ async function enviarCorreo(nombre, dias, de, a, permiso1, permiso2, permiso3, p
     subject: 'Notificación Solicitud Vacaciones',
     text: 'Cuerpo del correo en texto plano',
     html: '<b>' + 'Tipo de solicitud: ' + tipo_solicitud + '</b><br><br>' + '<b>' + nombre + ' ' + 'a solicitado' + ' ' + dias + ' ' + 'día(s) a partir del' + ' ' + de + ' ' + 'al' + ' ' + a + ' ' + permiso1 + ' ' + permiso2 + ' ' + permiso3 + ' ' + permiso4 + '.' + '<b><br><br>' + 'Motivo: ' + motivo + '</b><br><br>' + '<b>' + 'Favor de ingresar a' + ' ' + 'http://localhost:4200/login' + ' ' + 'para realizar una acción.' + '</b>' + '<br><br><b>' + ' ' + 'Saludos!' + '</b>'
+  };
+
+  // Enviar correo
+  try {
+    let info = await transporter.sendMail(mailOptions);
+    console.log('Mensaje enviado: %s', info.messageId);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+  async function convertirFecha(fecha){
+    const [year, month, day] = fecha.split('-');
+    const meses = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+
+    // Crear un objeto Date a partir de la cadena original (se le pasa el año, mes, día)
+    const fechaObjeto = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+    // Obtener el día, mes y año del objeto Date
+    const dia = fechaObjeto.getDate();
+    const mes = meses[fechaObjeto.getMonth()];
+    const anio = fechaObjeto.getFullYear();
+
+    // Formatear la nueva cadena
+    const fechaFormateada = `${dia.toString().padStart(2, '0')} de ${mes} de ${anio}`;
+    return fechaFormateada
+  }
+
+async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, permiso3, permiso4, motivo, tipo_solicitud) {
+
+  const fecha_a = await convertirFecha(de);
+  const fecha_h = await convertirFecha(a);
+ 
+  let transporter = nodemailer.createTransport({
+    host: 'mail.cinasa.com.mx',
+    port: 587,
+    secure: false,
+    auth: {
+      user: 'jarodriguez@cinasa.com.mx',
+      pass: 'G6ry3bjXVDCT39hW39SM'
+    },
+
+  });
+
+  // Definir opciones del correo
+  let mailOptions = {
+    from: 'jarodriguez@cinasa.com.mx',
+    to: 'jarodriguez@cinasa.com.mx',
+    subject: 'Notificación Solicitud Vacaciones',
+    text: 'Cuerpo del correo en texto plano',
+    html: '<b>' + 'Tipo de solicitud: ' + tipo_solicitud + '</b><br><br>' + '<b>' + nombre + ' ' + 'a solicitado' + ' ' + dias + ' ' + 'día(s) a partir del' + ' ' + fecha_a + ' ' + 'al' + ' ' + fecha_h + ' ' + permiso1 + ' ' + permiso2 + ' ' + permiso3 + ' ' + permiso4 + '.' + '<b><br><br>' + 'Motivo: ' + motivo + '</b><br><br>' + '<b>' + 'Favor de ingresar a' + ' ' + 'http://localhost:4200/login' + ' ' + 'para realizar una acción.' + '</b>' + '<br><br><b>' + ' ' + 'Saludos!' + '</b>'
   };
 
   // Enviar correo
@@ -181,6 +269,42 @@ async function enviarCorreoRechazado() {
     subject: 'Notificación Solicitud Vacaciones',
     text: 'Cuerpo del correo en texto plano',
     html: '<b>' + 'Se ha Rechazado tu solicitud' + '</b>'
+  };
+
+  // Enviar correo
+  try {
+    let info = await transporter.sendMail(mailOptions);
+    console.log('Mensaje enviado: %s', info.messageId);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function enviarCorreoVacacionesVencer(paramUno, paramDos) {
+  // console.log('Email')
+  // Crear transportador
+  let transporter = nodemailer.createTransport({
+    host: 'mail.cinasa.com.mx',
+    port: 587,
+    secure: false,
+    auth: {
+      user: 'jarodriguez@cinasa.com.mx',
+      pass: 'G6ry3bjXVDCT39hW39SM'
+    },
+
+    // tls: {
+    //     ciphers:''
+    // }
+    //SSL V3, TLS V1.0, TLS V1.1, TLS V1.2, and TLS V1.3
+  });
+
+  // Definir opciones del correo
+  let mailOptions = {
+    from: 'jarodriguez@cinasa.com.mx',
+    to: 'jarodriguez@cinasa.com.mx',
+    subject: 'Notificación Solicitud Vacaciones',
+    text: 'Cuerpo del correo en texto plano',
+    html: '<b>' + 'Hola '+paramUno+', excelente día. Te escribo para noitificarte que tus '+paramDos+' día(s) de vacaciones aún disponibles estan por vencer.' + '</b>'
   };
 
   // Enviar correo
@@ -341,7 +465,7 @@ async function insertarSolicitud(paramUno, paramDos, paramTres, paramCuatro, par
 
         if(result){
           console.log("Insertado con exito");
-          await enviarCorreo(paramUno, paramTres, paramCuatro, paramCinco, permiso1, permiso2, permiso3, permiso4, paramSiete, paramTrece);
+          await enviarCorreoInsertado(paramUno, paramTres, paramCuatro, paramCinco, permiso1, permiso2, permiso3, permiso4, paramSiete, paramTrece);
         }
        
         // Cerrar la conexión
@@ -625,14 +749,15 @@ async function aceptarRI(paramUno) {
 
 app.post('/aprobar', async (req, res) => {
     const datosRecibidos = req.body;
-    // console.log('Datos del frontend:', datosRecibidos);
+    console.log('Datos del frontend:', datosRecibidos);
     const id = datosRecibidos.id;
     const accion = datosRecibidos.accion;
     const dias_d = datosRecibidos.dias_d.toString();
     const dias_u = datosRecibidos.dias_u.toString();
     const clave = datosRecibidos.clave.toString();
+    const periodo = datosRecibidos.periodo;
   
-    const respuesta = await aprobarSolicitud(id, accion, dias_d, dias_u, clave);
+    const respuesta = await aprobarSolicitud(id, accion, dias_d, dias_u, clave, periodo);
     var resAlFrondend;
     if(respuesta.rowsAffected = 1){
        resAlFrondend = true;
@@ -644,7 +769,7 @@ app.post('/aprobar', async (req, res) => {
   
 })
 
-async function aprobarSolicitud(paramUno, paramDos, paramTres, paramCuatro, paramCinco) {
+async function aprobarSolicitud(paramUno, paramDos, paramTres, paramCuatro, paramCinco, paramSeis) {
     try {
         await sql.connect(config);
         console.log('Conexión a SQL Server exitosa');
@@ -661,7 +786,15 @@ async function aprobarSolicitud(paramUno, paramDos, paramTres, paramCuatro, para
 
         if(paramDos == 1){
           queryUpdateUno = "UPDATE solicitud_vacaciones SET status = 'Completado' WHERE id = @id"
-          queryUpdateDos = "UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles = @dias_d, Dias_ocupados = @dias_u WHERE Clave = @clave"
+            if(paramSeis == 'anterior'){
+              queryUpdateDos = "UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles_p2 = @dias_d, Dias_ocupados_p2 = @dias_u WHERE Clave = @clave"
+            }
+            if(paramSeis == 'actual'){
+              queryUpdateDos = "UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles = @dias_d, Dias_ocupados = @dias_u WHERE Clave = @clave"
+            }
+            if(paramSeis == 'ambos'){
+              queryUpdateDos = "UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles = @dias_d, Dias_ocupados = @dias_u, Dias_disponibles_p2 = '0', Dias_ocupados_p2 = Dias_vacaciones_p2 WHERE Clave = @clave"
+            }
           await enviarCorreoAceptado();
         }
         if(paramDos == 0){
@@ -706,7 +839,7 @@ async function conectarYConsultar(paramUser, paramPass) {
         request.input('pass', sql.NVarChar, paramPass);
 
         // const result = await request.query("SELECT * FROM colaboradores_julio_2025 WHERE Usuario = @user AND Contraseña = @pass");
-        const result = await request.query("select Apellido_materno,Apellido_paterno,CURP,C_costos,Clave,Departamento,Dias_disponibles,Dias_ocupados,Dias_vacaciones,Estatus,Estatus_Solicitud,Fecha_de_alta,Fecha_de_baja,Fecha_de_nacimiento,Nombre,Nombre_completo,Puesto,RFC,Sexo,Tipo,Tipo_Dep from colaboradores_julio_2025 where Usuario = @user AND Contraseña = @pass");
+        const result = await request.query("select Apellido_materno,Apellido_paterno,CURP,C_costos,Clave,Departamento,Dias_disponibles,Dias_ocupados,Dias_vacaciones,Estatus,Estatus_Solicitud,Fecha_de_alta,Fecha_de_baja,Fecha_de_nacimiento,Nombre,Nombre_completo,Puesto,RFC,Sexo,Tipo,Tipo_Dep, Dias_disponibles_p2, Dias_ocupados_p2 ,Dias_vacaciones_p2 from colaboradores_julio_2025 where Usuario = @user AND Contraseña = @pass");
 
         // console.log('Datos de la consulta:', result.recordset);
         const data = result.recordset;
@@ -735,13 +868,13 @@ async function consultarSolicitudes(tipo) {
         var updateStatus = '';
 
         if(tipo == 'JI'){     
-          consulta = "select u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.*from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and (s.libre_uno = 'SISTEMAS DE INFORMACION' or s.libre_uno = 'ALMACEN') and u.Clave != 300050 and s.status = 'Interesado' order by id desc";
+          consulta = "select u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, u.Dias_vacaciones_p2, u.Dias_disponibles_p2, u.Dias_ocupados_p2, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and (s.libre_uno = 'SISTEMAS DE INFORMACION' or s.libre_uno = 'ALMACEN') and u.Clave != 300050 and s.status = 'Interesado' order by id desc";
         }
         if(tipo == 'G'){
-          consulta = "select u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.*from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and (s.libre_uno = 'SISTEMAS DE INFORMACION' or s.libre_uno = 'ALMACEN') and s.status = 'Jefe Inmediato' order by id desc";
+          consulta = "select u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and (s.libre_uno = 'SISTEMAS DE INFORMACION' or s.libre_uno = 'ALMACEN') and s.status = 'Jefe Inmediato' order by id desc";
         }
         if(tipo == 'RI'){
-          consulta = "select u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.*from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and s.status != 'Completado' and s.status != 'Rechazado' order by id desc";
+          consulta = "select u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, u.Dias_vacaciones_p2, u.Dias_disponibles_p2, u.Dias_ocupados_p2, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and s.status != 'Completado' and s.status != 'Rechazado' and s.status != 'Inhabil' order by id desc";
         }
      
         // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
@@ -827,6 +960,7 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
             if(paramDepto != '' && paramAnio != '' && paramMes == '' && paramCriterio == ''){
                 consulta = 'select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and u.Departamento = @depto and s.fecha_solicitud like @anio order by id desc';
             }
+
             if(paramDepto != '' && paramAnio != '' && paramMes != '' && paramCriterio == ''){
                 consulta = 'select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio order by id desc';
             }
@@ -849,6 +983,10 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
             if(paramDepto != '' && paramAnio != '' && paramMes != '' && paramCriterio != ''){
                 consulta = 'select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio order by id desc';
             }
+
+            if(paramDepto != '' && paramAnio == '' && paramMes != '' && paramCriterio != ''){
+                consulta = 'select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and u.Departamento = @depto and s.fecha_solicitud like @mes order by id desc';
+            }
         }
 
         if(tipoUsuario == 'JI'){
@@ -857,13 +995,13 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
                 consulta = 'select a.C_costos, a.Clave, a.Nombre_completo, a.Departamento, a.Puesto, a.Fecha_de_alta, a.Estatus, a.Dias_vacaciones, a.Dias_disponibles, a.Dias_ocupados, s.* from colaboradores_julio_2025 as a, solicitud_vacaciones as s where a.Clave = s.clave and a.Departamento = @depto order by id desc';
             }
             if(paramDepto == '' && paramAnio != '' && paramMes == '' && paramCriterio == ''){
-                consulta = "select a.C_costos, a.Clave, a.Nombre_completo, a.Departamento, a.Puesto, a.Fecha_de_alta, a.Estatus, a.Dias_vacaciones, a.Dias_disponibles, a.Dias_ocupados, s.* from colaboradores_julio_2025 as a, solicitud_vacaciones as s where a.Clave = s.clave and fecha_solicitud like @anio and (a.Departamento = 'MANTENIMIENTO' or a.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select a.C_costos, a.Clave, a.Nombre_completo, a.Departamento, a.Puesto, a.Fecha_de_alta, a.Estatus, a.Dias_vacaciones, a.Dias_disponibles, a.Dias_ocupados, s.* from colaboradores_julio_2025 as a, solicitud_vacaciones as s where a.Clave = s.clave and fecha_solicitud like @anio and (a.Departamento = 'ALMACEN' or a.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
             }
             if(paramDepto == '' && paramAnio == '' && paramMes != '' && paramCriterio == ''){
-                consulta = "select a.C_costos, a.Clave, a.Nombre_completo, a.Departamento, a.Puesto, a.Fecha_de_alta, a.Estatus, a.Dias_vacaciones, a.Dias_disponibles, a.Dias_ocupados, s.* from colaboradores_julio_2025 as a, solicitud_vacaciones as s where a.Clave = s.clave and fecha_solicitud like @mes and fecha_solicitud like @anioMes and (a.Departamento = 'MANTENIMIENTO' or a.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select a.C_costos, a.Clave, a.Nombre_completo, a.Departamento, a.Puesto, a.Fecha_de_alta, a.Estatus, a.Dias_vacaciones, a.Dias_disponibles, a.Dias_ocupados, s.* from colaboradores_julio_2025 as a, solicitud_vacaciones as s where a.Clave = s.clave and fecha_solicitud like @mes and fecha_solicitud like @anioMes and (a.Departamento = 'ALMACEN' or a.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
             }
             if(paramDepto == '' && paramAnio == '' && paramMes == '' && paramCriterio != ''){
-                consulta = "select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and (u.Departamento = 'MANTENIMIENTO' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and (u.Departamento = 'ALMACEN' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
             }
 
             if(paramDepto != '' && paramAnio != '' && paramMes == '' && paramCriterio == ''){
@@ -873,7 +1011,7 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
                 consulta = 'select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio order by id desc';
             }
             if(paramDepto == '' && paramAnio != '' && paramMes != '' && paramCriterio == ''){
-                consulta = "select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio and (u.Departamento = 'MANTENIMIENTO' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio and (u.Departamento = 'ALMACEN' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
             }
             if(paramDepto != '' && paramAnio == '' && paramMes != '' && paramCriterio == ''){
                 consulta = 'select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = s.clave and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes order by id desc';
@@ -883,13 +1021,17 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
                 consulta = 'select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and u.Departamento = @depto order by id desc';
             }
             if(paramDepto == '' && paramAnio != '' && paramMes == '' && paramCriterio != ''){
-                consulta = "select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and s.fecha_solicitud like @anio and (u.Departamento = 'MANTENIMIENTO' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and s.fecha_solicitud like @anio and (u.Departamento = 'ALMACEN' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
             }
             if(paramDepto == '' && paramAnio == '' && paramMes != '' && paramCriterio != ''){
-                consulta = "select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes and (u.Departamento = 'MANTENIMIENTO' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes and (u.Departamento = 'ALMACEN' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
             }
             if(paramDepto != '' && paramAnio != '' && paramMes != '' && paramCriterio != ''){
                 consulta = 'select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio order by id desc';
+            }
+
+            if(paramDepto != '' && paramAnio == '' && paramMes != '' && paramCriterio != ''){
+                consulta = 'select u.C_costos, u.Clave, u.Nombre_completo, u.Departamento, u.Puesto, u.Fecha_de_alta, u.Estatus, u.Dias_vacaciones, u.Dias_disponibles,u.Dias_ocupados, s.* from colaboradores_julio_2025 as u, solicitud_vacaciones as s where u.Clave = @criterio and s.clave = @criterio and u.Departamento = @depto and s.fecha_solicitud like @mes order by id desc';
             }
 
         }
@@ -989,6 +1131,11 @@ async function consultarColAsociados(tipo, tipo_dep) {
           
           consulta = "select * from colaboradores_julio_2025 where Tipo = 'C' and Tipo_Dep = 'Ref'";
         }
+
+        if(tipo == 'RIA' && tipo_dep == null){
+          
+          consulta = "select * from colaboradores_julio_2025 where Tipo = 'C' OR Tipo = 'S' OR Tipo = 'RIA' OR  Tipo = 'JI' OR Tipo = 'RI'";
+        }
      
         // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
         const result = await request.query(consulta);
@@ -1054,8 +1201,28 @@ app.post('/generar-inhabil', async (req, res) => {
     var respuesta;
     const colaboradores = await consultaGeneral();
     // console.log(colaboradores);
+    var dias_oc;
+    var dias_di;
+    var periodo;
     
     for (const colaborador of colaboradores) {
+
+      if(colaborador.Dias_disponibles_p2 != 0){
+        dias_oc = parseInt(colaborador.Dias_ocupados_p2) + parseInt(datosRecibidos.cDias);
+        dias_di = parseInt(colaborador.Dias_disponibles_p2) - parseInt(datosRecibidos.cDias);
+        periodo = 'anterior';
+      }
+      if(colaborador.Dias_disponibles_p2 == 0){
+        dias_oc = parseInt(colaborador.Dias_ocupados) + parseInt(datosRecibidos.cDias);
+        dias_di = parseInt(colaborador.Dias_disponibles) - parseInt(datosRecibidos.cDias);
+        periodo = 'actual';
+      }
+      
+      // const dias_oc = parseInt(colaborador.Dias_ocupados) + parseInt(datosRecibidos.cDias);
+      // const dias_di = parseInt(colaborador.Dias_disponibles) - parseInt(datosRecibidos.cDias);
+      
+      const dias_o = dias_oc.toString();
+      const dias_d = dias_di.toString();
       
       // console.log('Datos del frontend:', datosRecibidos);
       const nombre = colaborador.Nombre_completo;
@@ -1073,7 +1240,7 @@ app.post('/generar-inhabil', async (req, res) => {
       const clave = colaborador.Clave;
       const dep = colaborador.Departamento;
       // await enviarCorreo();
-      respuesta = await insertarSolicitudMasiva(nombre,fecha,dias,fechaA,fechaH,tpermiso1,motivo,firmaInt,clave,tpermiso2,tpermiso3,tpermiso4,tipo_solicitud, dep);
+      respuesta = await insertarSolicitudMasiva(nombre,fecha,dias,fechaA,fechaH,tpermiso1,motivo,firmaInt,clave,tpermiso2,tpermiso3,tpermiso4,tipo_solicitud, dep, dias_o, dias_d, periodo);
     }
     await sql.close();
     console.log('Conexión cerrada');
@@ -1108,11 +1275,10 @@ async function consultaGeneral() {
   }
 }
 
-async function insertarSolicitudMasiva(paramUno, paramDos, paramTres, paramCuatro, paramCinco, paramSeis, paramSiete, paramOcho, paramNueve, paramDiez, paramOnce, paramDoce, paramTrece, paramCatorce) {
+async function insertarSolicitudMasiva(paramUno, paramDos, paramTres, paramCuatro, paramCinco, paramSeis, paramSiete, paramOcho, paramNueve, paramDiez, paramOnce, paramDoce, paramTrece, paramCatorce, paramQuince, paramDiesiseis, paramDiesisiete) {
     try {
         await sql.connect(config);
         console.log('Conexión a SQL Server exitosa');
-     
         // Crear una solicitud (request)
         const request = new sql.Request();
 
@@ -1131,6 +1297,8 @@ async function insertarSolicitudMasiva(paramUno, paramDos, paramTres, paramCuatr
         request.input('clave', sql.Int, paramNueve);
         request.input('dep', sql.NVarChar, paramCatorce);
 
+        request.input('dias_o', sql.NVarChar, paramQuince);
+        request.input('dias_d', sql.NVarChar, paramDiesiseis);
         // 1. Crea un objeto de fecha.
         const tiempoEjecucion = new Date();
         // 2. Define las opciones para el formato de salida.
@@ -1153,9 +1321,17 @@ async function insertarSolicitudMasiva(paramUno, paramDos, paramTres, paramCuatr
         console.log('La función se ejecutó el:' + formatoEnEspanol);
         request.input('date', sql.NVarChar, formatoEnEspanol);
 
-        const result = await request.query("INSERT INTO solicitud_vacaciones (clave, nombre, fecha_solicitud, tipo_solicitud, cuantos_dias, fecha_apartir, fecha_hasta, con_sueldo, sin_sueldo, sindicalizado, no_sindicalizado, motivo, firma_interesado, firma_jefe_in, firms_gerente, status, libre_uno, libre_dos) VALUES (@clave, @nombre, @fecha, @tipo_sol, @dias, @fechaA, @fechaH, @permiso1, @permiso2, @permiso3, @permiso4, @motivo, @date, '', '', 'Interesado', @dep, '')");
-        const resultUpdate = await request.query("UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Pendiente' WHERE Clave = @clave");
-        
+        const result = await request.query("INSERT INTO solicitud_vacaciones (clave, nombre, fecha_solicitud, tipo_solicitud, cuantos_dias, fecha_apartir, fecha_hasta, con_sueldo, sin_sueldo, sindicalizado, no_sindicalizado, motivo, firma_interesado, firma_jefe_in, firms_gerente, status, libre_uno, libre_dos) VALUES (@clave, @nombre, @fecha, @tipo_sol, @dias, @fechaA, @fechaH, @permiso1, @permiso2, @permiso3, @permiso4, @motivo, @date, @date, @date, 'Completado', @dep, '')");
+        // const resultUpdate = await request.query("UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Pendiente' WHERE Clave = @clave");
+        // const resultUpdateColaborador = await request.query("UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles = @dias_d, Dias_ocupados = @dias_o WHERE Clave = @clave");
+
+        if(paramDiesisiete == 'anterior'){
+            const resultUpdateColaborador = await request.query("UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles_p2 = @dias_d, Dias_ocupados_p2 = @dias_o WHERE Clave = @clave");
+        }
+        if(paramDiesisiete == 'actual'){
+            const resultUpdateColaborador = await request.query("UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles = @dias_d, Dias_ocupados = @dias_o WHERE Clave = @clave");
+        }
+
         var permiso1 = '', permiso2 = '', permiso3 = '', permiso4 = '';
 
         if(paramSeis == true){
@@ -1371,7 +1547,7 @@ app.post('/aceptar-todas', async (req, res) => {
     console.log(datosRecibidos);
     for (const colaborador of datosRecibidos) {
       // console.log('Datos del frontend:', datosRecibidos);
-      respuesta = await updateColaboradorTodasAceptar(colaborador.Clave);
+      respuesta = await updateColaboradorTodasAceptar(colaborador.id);
     }
     // Cerrar la conexión
     await sql.close();
@@ -1396,11 +1572,11 @@ async function updateColaboradorTodasAceptar(paramUno) {
         // Crear una solicitud (request)
         const request = new sql.Request();
 
-        request.input('clave', sql.Int, paramUno);
+        request.input('id', sql.Int, paramUno);
 
         // await enviarCorreoRechazado();
 
-        const resultado = await request.query("UPDATE solicitud_vacaciones SET status = 'Aceptado' where clave = @clave");
+        const resultado = await request.query("UPDATE solicitud_vacaciones SET status = 'Aceptado' where id = @id");
      
         if(resultado){
           console.log("Modificado con exito");
@@ -1540,19 +1716,21 @@ async function updateGerenteTodas(paramUno, paramDos, paramTres, paramCuatro, pa
 
 app.post('/firmar-todas-ri', async (req, res) => {
     const solicitudes = req.body;
-    // console.log('Datos del frontend:', datosRecibidos);
+    console.log('Datos del frontend:', solicitudes);
     var respuesta;
     for(let solicitud of solicitudes){
 
-      const dias_disponibles = parseInt(solicitud.Dias_disponibles) - parseInt(solicitud.cuantos_dias);
-      const dias_ocupados = parseInt(solicitud.Dias_ocupados) + parseInt(solicitud.cuantos_dias);
+      // const dias_disponibles = solicitud.Dias_disponibles - parseInt(solicitud.cuantos_dias);
+      // const dias_ocupados = solicitud.Dias_ocupados + parseInt(solicitud.cuantos_dias);
 
       const id = solicitud.id;
-      const dias_d = dias_disponibles.toString();
-      const dias_u = dias_ocupados.toString();
+      const dias_d = solicitud.Dias_disponibles.toString();
+      const dias_u = solicitud.Dias_ocupados.toString();
+      const dias_d_p2 = solicitud.Dias_disponibles_p2.toString();
+      const dias_u_p2 = solicitud.Dias_ocupados_p2.toString();
       const clave = solicitud.clave.toString();
     
-      respuesta = await firmarTodoRI(id, dias_d, dias_u, clave);
+      respuesta = await firmarTodoRI(id, dias_d, dias_u, dias_d_p2, dias_u_p2, clave);
     }
 
     // Cerrar la conexión
@@ -1570,7 +1748,7 @@ app.post('/firmar-todas-ri', async (req, res) => {
   
 })
 
-async function firmarTodoRI(paramUno, paramTres, paramCuatro, paramCinco) {
+async function firmarTodoRI(paramUno, paramDos, paramTres, paramCuatro, paramCinco, paramSeis) {
     try {
         await sql.connect(config);
         console.log('Conexión a SQL Server exitosa');
@@ -1580,13 +1758,15 @@ async function firmarTodoRI(paramUno, paramTres, paramCuatro, paramCinco) {
         // Crear una solicitud (request)
         const request = new sql.Request();
 
-        request.input('clave', sql.NVarChar, paramCinco);
         request.input('id', sql.Int, paramUno);
-        request.input('dias_d', sql.NVarChar, paramTres);
-        request.input('dias_u', sql.NVarChar, paramCuatro);
+        request.input('dias_d', sql.NVarChar, paramDos);
+        request.input('dias_u', sql.NVarChar, paramTres);
+        request.input('dias_d_p2', sql.NVarChar, paramCuatro);
+        request.input('dias_u_p2', sql.NVarChar, paramCinco);
+        request.input('clave', sql.NVarChar, paramSeis);
 
         queryUpdateUno = "UPDATE solicitud_vacaciones SET status = 'Completado' WHERE id = @id"
-        queryUpdateDos = "UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles = @dias_d, Dias_ocupados = @dias_u WHERE Clave = @clave"
+        queryUpdateDos = "UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles = @dias_d, Dias_ocupados = @dias_u, Dias_disponibles_p2 = @dias_d_p2, Dias_ocupados_p2 = @dias_u_p2 WHERE Clave = @clave"
         // await enviarCorreoAceptado();
         
         const resultUno = await request.query(queryUpdateUno);
