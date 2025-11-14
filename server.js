@@ -87,19 +87,20 @@ async function generarPeriodo() {
         var sabados;
         var dias_disfrutar;
 
-        const result = await request.query("SELECT * FROM [Vac.control_vacaciones] WHERE Fecha_ingreso = CAST(DATEADD(YEAR, -1, GETDATE()) AS DATE);");
+        const result = await request.query("SELECT * FROM [Vac.control_vacaciones] WHERE DATEPART(MONTH, Fecha_ingreso) = DATEPART(MONTH, GETDATE()) AND DATEPART(DAY, Fecha_ingreso) = DATEPART(DAY, GETDATE())");
 
         if(result){
-          // console.log(result.recordset);
+          console.log(result.recordset);
           // await enviarCorreoInsertado(paramUno, paramTres, paramCuatro, paramCinco, permiso1, permiso2, permiso3, permiso4, paramSiete, paramTrece);
           for(let colaborador of result.recordset){
 
             clave =  colaborador.Clave;
             periodo_actual = colaborador.Periodo;
+            const sumPeriodo = parseInt(colaborador.Periodo)+1
 
-            periodo_siguiente = '2026';
+            periodo_siguiente = sumPeriodo.toString();
             anios = colaborador.Años + 1;
-            vacaciones = anios == 1 ? 12 : 0;
+            vacaciones = anios == 1 ? 12 : anios == 2 ? 13 : anios == 3 ? 14 : 0;
             sabados = vacaciones < 18 ? 2 : 3;
             dias_disfrutar = vacaciones - sabados;
 
@@ -154,8 +155,8 @@ async function consultaVacacionesVencer() {
         console.log('Conexión a SQL Server exitosa');
         const request = new sql.Request();
      
-        const result = await request.query("SELECT * FROM [Vac.control_vacaciones] as c, cin_emp as e WHERE Saldo != 0 AND DATEADD(month, -1, DATEADD(year, 1, Fecha_ingreso)) = CAST(GETDATE() AS DATE) and e.emp_cve =  TRY_CONVERT(nvarchar,c.Clave)");
-
+        // const result = await request.query("SELECT * FROM [Vac.control_vacaciones] as c, cin_emp as e WHERE Saldo != 0 AND DATEADD(month, -1, DATEADD(year, 1, Fecha_ingreso)) = CAST(GETDATE() AS DATE) and e.emp_cve =  TRY_CONVERT(nvarchar,c.Clave)");
+          const result = await request.query("SELECT * FROM [Vac.control_vacaciones] as c, cin_emp as e WHERE e.emp_cve =  TRY_CONVERT(nvarchar,c.Clave) and DATEADD(MONTH, 1, CAST(GETDATE() AS DATE)) = CASE WHEN DATEFROMPARTS(YEAR(CAST(GETDATE() AS DATE)), MONTH(c.Fecha_ingreso), DAY(c.Fecha_ingreso)) >= CAST(GETDATE() AS DATE) THEN DATEFROMPARTS(YEAR(CAST(GETDATE() AS DATE)), MONTH(c.Fecha_ingreso), DAY(c.Fecha_ingreso)) ELSE DATEFROMPARTS(YEAR(CAST(GETDATE() AS DATE)) + 1, MONTH(c.Fecha_ingreso), DAY(c.Fecha_ingreso)) END;");
         if(result){
           // console.log(result.recordset);
           // await enviarCorreoInsertado(paramUno, paramTres, paramCuatro, paramCinco, permiso1, permiso2, permiso3, permiso4, paramSiete, paramTrece);
@@ -195,7 +196,7 @@ cron.schedule('0 8 * * *', ausentarColaboradores, {
   timezone: "America/Mexico_City" // O la zona horaria de tu preferencia
 });
 
-cron.schedule('0 6 * * *', generarPeriodo, {
+cron.schedule('0 7 * * *', generarPeriodo, {
   scheduled: true,
   timezone: "America/Mexico_City" // O la zona horaria de tu preferencia
 });
@@ -334,7 +335,8 @@ async function enviarCorreo(nombre, dias, de, a, permiso1, permiso2, permiso3, p
   // Definir opciones del correo
   let mailOptions = {
     from: 'vacaciones@cinasa.com.mx',
-    to: 'mchavez@cinasa.com.mx',
+    // to: 'mchavez@cinasa.com.mx',
+    to: 'jarodriguez@cinasa.com.mx',
     subject: 'Notificación Solicitud',
     text: 'Cuerpo del correo en texto plano',
     html: '<b>' + 'Tipo de solicitud: ' + tipo_solicitud + '</b><br><br>' + '<b>' + nombre + ' ' + 'a solicitado' + ' ' + dias + ' ' + 'día(s) a partir del' + ' ' + de + ' ' + 'al' + ' ' + a + ' ' + permiso1 + ' ' + permiso2 + ' ' + permiso3 + ' ' + permiso4 + '.' + '<b><br><br>' + 'Motivo: ' + motivo + '</b><br><br>' + '<b>' + 'Favor de ingresar a' + ' ' + 'http://localhost:4200/login' + ' ' + 'para realizar una acción.' + '</b>' + '<br><br><b>' + ' ' + 'Saludos!' + '</b>'
@@ -395,7 +397,8 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
   // Definir opciones del correo
   let mailOptions = {
     from: 'vacaciones@cinasa.com.mx',
-    to: correo,
+    // to: correo,
+    to: 'jarodriguez@cinasa.com.mx',
     subject: 'Notificación Solicitud',
     text: 'Cuerpo del correo en texto plano',
     html: '<b>' + 'Tipo de solicitud: ' + tipo_solicitud + '</b><br><br>' + '<b>' + nombre + ' ' + 'a solicitado' + ' ' + dias + ' ' + 'día(s) a partir del' + ' ' + fecha_a + ' ' + 'al' + ' ' + fecha_h + ' ' + permiso1 + ' ' + permiso2 + ' ' + permiso3 + ' ' + permiso4 + '.' + '<b><br><br>' + 'Motivo: ' + motivo + '</b><br><br>' + '<b>' + 'Favor de ingresar a' + ' ' + 'http://localhost:4200/login' + ' ' + 'para realizar una acción.' + '</b>' + '<br><br><b>' + ' ' + 'Saludos!' + '</b>'
@@ -1426,12 +1429,13 @@ async function consultarColAsociados(tipo, tipo_dep) {
         if(tipo == 'S'){
           
           // consulta = "select * from cin_emp where Tipo = 'C'";
-          consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and e.emp_tipo = 'C' and e.emp_status != 'B';"
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and e.emp_tipo = 'C' and e.emp_status != 'B';"
+          // consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_status != 'B';"
         }
 
-        if(tipo == 'RIA' && tipo_dep == null){
+        if(tipo == 'RIA'){
           
-          consulta = "select * from colaboradores_julio_2025 where Tipo = 'C' OR Tipo = 'S' OR Tipo = 'RIA' OR  Tipo = 'JI' OR Tipo = 'RI'";
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and e.emp_status != 'B';"
         }
      
         // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
