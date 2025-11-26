@@ -335,8 +335,8 @@ async function enviarCorreo(nombre, dias, de, a, permiso1, permiso2, permiso3, p
   // Definir opciones del correo
   let mailOptions = {
     from: 'vacaciones@cinasa.com.mx',
-    // to: 'mchavez@cinasa.com.mx',
-    to: 'jarodriguez@cinasa.com.mx',
+    to: 'mchavez@cinasa.com.mx',
+    // to: 'jarodriguez@cinasa.com.mx',
     subject: 'Notificación Solicitud',
     text: 'Cuerpo del correo en texto plano',
     html: '<b>' + 'Tipo de solicitud: ' + tipo_solicitud + '</b><br><br>' + '<b>' + nombre + ' ' + 'a solicitado' + ' ' + dias + ' ' + 'día(s) a partir del' + ' ' + de + ' ' + 'al' + ' ' + a + ' ' + permiso1 + ' ' + permiso2 + ' ' + permiso3 + ' ' + permiso4 + '.' + '<b><br><br>' + 'Motivo: ' + motivo + '</b><br><br>' + '<b>' + 'Favor de ingresar a' + ' ' + 'http://localhost:4200/login' + ' ' + 'para realizar una acción.' + '</b>' + '<br><br><b>' + ' ' + 'Saludos!' + '</b>'
@@ -393,12 +393,73 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
   if(jefe == 'GLR'){
     correo = 'glechuga@cinasa.com.mx';
   }
+  if(jefe == 'KAR'){
+    correo = 'kalcantara@cinasa.com.mx';
+  }
+  if(jefe == 'JCJ'){
+    correo = 'jcano@cinasa.com.mx';
+  }
+  if(jefe == 'FRV'){
+    correo = 'frodriguez@cinasa.com.mx';
+  }
+  if(jefe == 'ORLS'){
+    correo = 'orosalio@cinasa.com.mx';
+  }
+  if(jefe == 'BHTC'){
+    correo = 'logistica@cinasa.com.mx';
+  }
+  if(jefe == 'MVHA'){
+    correo = 'mvianey@cinasa.com.mx';
+  }
+  if(jefe == 'JJBP'){
+    correo = 'jbernal@cinasa.com.mx';
+  }
+  if(jefe == 'JBG'){
+    correo = 'jbustos@cinasa.com.mx';
+  }
+  if(jefe == 'SCMG'){
+    correo = 'smanzo@cinasa.com.mx';
+  }
+  if(jefe == 'GHGS'){
+    correo = 'hgutierrez@cinasa.com.mx';
+  }
+  if(jefe == 'CNVS'){
+    correo = 'cvaldes@cinasa.com.mx';
+  }
+  if(jefe == 'AGE'){
+    correo = 'agonzalez@cinasa.com.mx';
+  }
+  if(jefe == 'AOP'){
+    correo = 'aordonez@cinasa.com.mx';
+  }
+  if(jefe == 'EMRP'){
+    correo = 'erios@cinasa.com.mx';
+  }
+  if(jefe == 'FLG'){
+    correo = 'flopez@cinasa.com.mx';
+  }
+  if(jefe == 'JGH'){
+    correo = 'jgutierrez@cinasa.com.mx';
+  }
+  if(jefe == 'JFVE'){
+    correo = 'fvillanueva@cinasa.com.mx';
+  }
+  if(jefe == 'YMGS'){
+    correo = 'ygonzalez@cinasa.com.mx';
+  }
+  if(jefe == 'FJTR'){
+    correo = 'tecnicoabrasivos@cinasa.com.mx';
+  }
+  if(jefe == 'TJRH'){
+    correo = 'trodriguez@cinasa.com.mx';
+  }
+
 
   // Definir opciones del correo
   let mailOptions = {
     from: 'vacaciones@cinasa.com.mx',
-    // to: correo,
-    to: 'jarodriguez@cinasa.com.mx',
+    to: correo,
+    // to: 'jarodriguez@cinasa.com.mx',
     subject: 'Notificación Solicitud',
     text: 'Cuerpo del correo en texto plano',
     html: '<b>' + 'Tipo de solicitud: ' + tipo_solicitud + '</b><br><br>' + '<b>' + nombre + ' ' + 'a solicitado' + ' ' + dias + ' ' + 'día(s) a partir del' + ' ' + fecha_a + ' ' + 'al' + ' ' + fecha_h + ' ' + permiso1 + ' ' + permiso2 + ' ' + permiso3 + ' ' + permiso4 + '.' + '<b><br><br>' + 'Motivo: ' + motivo + '</b><br><br>' + '<b>' + 'Favor de ingresar a' + ' ' + 'http://localhost:4200/login' + ' ' + 'para realizar una acción.' + '</b>' + '<br><br><b>' + ' ' + 'Saludos!' + '</b>'
@@ -413,7 +474,7 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
   }
 }
 
-async function enviarCorreoAceptado(correo) {
+async function enviarCorreoAceptado(correo, nombre) {
   // console.log('Email')
   // Crear transportador
   let transporter = nodemailer.createTransport({
@@ -435,9 +496,22 @@ async function enviarCorreoAceptado(correo) {
   let mailOptions = {
     from: 'vacaciones@cinasa.com.mx',
     to: correo,
+    // to: 'jarodriguez@cinasa.com.mx',
     subject: 'Notificación Solicitud',
     text: 'Cuerpo del correo en texto plano',
-    html: '<b>' + 'Se ha Aceptado tu solicitud' + '</b>'
+    html: '<b>' + nombre + ' se ha ACEPTADO tu solicitud.' + '</b><br><br>' + '<b>' + ' Disfruta de tu tiempo.' +'</b><br><br>' + '<img src="cid:imagen_logo" alt="Logo">' +'</b><br><br>' + '<img src="cid:imagen_firma" alt="Firma">',
+    attachments: [
+      {
+        filename: 'logo.png',
+        path: 'attachments/cin.png', // Ruta local de tu imagen
+        cid: 'imagen_logo'
+      },
+      {
+        filename: 'firma.png',
+        path: 'attachments/firma.png', // Ruta local de tu imagen
+        cid: 'imagen_firma'
+      },
+    ]
   };
 
   // Enviar correo
@@ -485,7 +559,7 @@ async function enviarCorreoAceptadoMasivo(correo) {
   }
 }
 
-async function enviarCorreoRechazado(correo) {
+async function enviarCorreoRechazado(correo, nombre) {
   // console.log('Email')
   // Crear transportador
   let transporter = nodemailer.createTransport({
@@ -507,9 +581,22 @@ async function enviarCorreoRechazado(correo) {
   let mailOptions = {
     from: 'vacaciones@cinasa.com.mx',
     to: correo,
+    // to: 'jarodriguez@cinasa.com.mx',
     subject: 'Notificación Solicitud',
     text: 'Cuerpo del correo en texto plano',
-    html: '<b>' + 'Se ha Rechazado tu solicitud' + '</b>'
+    html: '<b>' + nombre + ' se ha RECHAZADO tu solicitud.' + '</b><br><br>' + '<b>' + ' Lo sentimos.' +'</b><br><br>' + '<b>' + ' Comunicate con RELACIONES INDUSTRIALES para cualquier duda.' +'</b><br><br>' + '<img src="cid:imagen_logo" alt="Logo">' +'</b><br><br>' + '<img src="cid:imagen_firma" alt="Firma">',
+    attachments: [
+      {
+        filename: 'logo.png',
+        path: 'attachments/cin_rech.png', // Ruta local de tu imagen
+        cid: 'imagen_logo'
+      },
+      {
+        filename: 'firma.png',
+        path: 'attachments/firma.png', // Ruta local de tu imagen
+        cid: 'imagen_firma'
+      },
+    ]
   };
 
   // Enviar correo
@@ -680,6 +767,7 @@ async function insertarSolicitud(paramUno, paramDos, paramTres, paramCuatro, par
 
         request.input('periodo', sql.NVarChar, paramQuince);
         request.input('genera', sql.NVarChar, paramDiesyseis);
+        request.input('relacion', sql.NVarChar, paramVeite);
         // 1. Crea un objeto de fecha.
         const tiempoEjecucion = new Date();
         // 2. Define las opciones para el formato de salida.
@@ -719,7 +807,7 @@ async function insertarSolicitud(paramUno, paramDos, paramTres, paramCuatro, par
         // // Cambia sql.DateTime2 de vuelta a sql.NVarChar
         // request.input('date', sql.NVarChar, fechaSQLStandard); 
 
-        const result = await request.query("INSERT INTO [Vac.solicitud] (clave, nombre, departamento, fecha_solicitud, tipo_solicitud, cuantos_dias, fecha_apartir, fecha_hasta, con_sueldo, sin_sueldo, sindicalizado, no_sindicalizado, motivo, firma_interesado, firma_jefe_in, firma_gerente, status, periodo, genera) VALUES (@clave, @nombre, @dep, @fecha, @tipo_sol, @dias, @fechaA, @fechaH, @permiso1, @permiso2, @permiso3, @permiso4, @motivo, @date, '', '', 'Interesado', @periodo, @genera)");
+        const result = await request.query("INSERT INTO [Vac.solicitud] (clave, nombre, departamento, fecha_solicitud, tipo_solicitud, cuantos_dias, fecha_apartir, fecha_hasta, con_sueldo, sin_sueldo, sindicalizado, no_sindicalizado, motivo, firma_interesado, firma_jefe_in, firma_gerente, status, periodo, genera, reldep) VALUES (@clave, @nombre, @dep, @fecha, @tipo_sol, @dias, @fechaA, @fechaH, @permiso1, @permiso2, @permiso3, @permiso4, @motivo, @date, '', '', 'Interesado', @periodo, @genera, @relacion)");
         const resultUpdate = await request.query("UPDATE cin_emp SET emp_estsol = 'Pendiente' WHERE emp_cve = @clave");
         
         var permiso1 = '', permiso2 = '', permiso3 = '', permiso4 = '';
@@ -1031,8 +1119,10 @@ app.post('/aprobar', async (req, res) => {
     const clave = datosRecibidos.clave.toString();
     const periodo = datosRecibidos.periodo;
     const correo = datosRecibidos.correo;
+    const nombre = datosRecibidos.nombre;
+    const genera = datosRecibidos.genera;
   
-    const respuesta = await aprobarSolicitud(id, accion, dias_d, dias_u, clave, periodo, correo);
+    const respuesta = await aprobarSolicitud(id, accion, dias_d, dias_u, clave, periodo, correo, nombre, genera);
     var resAlFrondend;
     if(respuesta.rowsAffected = 1){
        resAlFrondend = true;
@@ -1044,7 +1134,7 @@ app.post('/aprobar', async (req, res) => {
   
 })
 
-async function aprobarSolicitud(paramUno, paramDos, paramTres, paramCuatro, paramCinco, paramSeis, paramSiete) {
+async function aprobarSolicitud(paramUno, paramDos, paramTres, paramCuatro, paramCinco, paramSeis, paramSiete, paramOcho, paramNueve) {
     try {
         await sql.connect(config);
         console.log('Conexión a SQL Server exitosa');
@@ -1052,6 +1142,9 @@ async function aprobarSolicitud(paramUno, paramDos, paramTres, paramCuatro, para
         var queryUpdateUno = '';
         var queryUpdateDos = '';
         var queryUpdateTres = '';
+
+        var queryCuatro = '';
+        var email_genera = '';
         // Crear una solicitud (request)
         const request = new sql.Request();
 
@@ -1061,19 +1154,27 @@ async function aprobarSolicitud(paramUno, paramDos, paramTres, paramCuatro, para
         request.input('dias_u', sql.NVarChar, paramCuatro);
 
         request.input('periodo', sql.NVarChar, paramSeis);
-        console.log(paramDos);
+
+        request.input('Clave_genera', sql.NVarChar, paramNueve);
+        
+        if(paramNueve){
+          queryCuatro = "SELECT emp_mail from cin_emp where emp_cve = @Clave_genera";
+          const result_mail = await request.query(queryCuatro);
+          email_genera = result_mail.recordset[0].emp_mail
+          console.log('Correo para enviar: ', email_genera);
+        }
         if(paramDos == 1){
           queryUpdateUno = "UPDATE [Vac.solicitud] SET status = 'Completado' WHERE id = @id"
           queryUpdateDos = "UPDATE [Vac.control_vacaciones] SET Saldo = @dias_d, Vacaciones_tomadas = @dias_u WHERE Clave = @clave and Periodo = @periodo"
           queryUpdateTres = "UPDATE cin_emp SET emp_estsol = 'Disponible' WHERE emp_cve = @clave"
             
-          await enviarCorreoAceptado(paramSiete);
+          await enviarCorreoAceptado(email_genera, paramOcho);
         }
         if(paramDos == 0){
           queryUpdateUno = "UPDATE [Vac.solicitud] SET status = 'Rechazado' WHERE id = @id"
           queryUpdateDos = "UPDATE cin_emp SET emp_estsol = 'Disponible' WHERE emp_cve = @clave"
-          console.log(paramSiete);
-          await enviarCorreoRechazado(paramSiete);
+          // console.log(email_genera);
+          await enviarCorreoRechazado(email_genera, paramOcho);
 
         }
 
@@ -1133,7 +1234,7 @@ async function conectarYConsultar(paramUser, paramPass) {
     }
 }
 
-async function consultarSolicitudes(tipo) {
+async function consultarSolicitudes(tipo, relacion) {
     try {
         await sql.connect(config);
         console.log('Conexión a SQL Server exitosa solicitudes');
@@ -1144,14 +1245,66 @@ async function consultarSolicitudes(tipo) {
         var consulta = '';
         var updateStatus = '';
 
-        if(tipo == 'JI'){     
-          consulta = "select s.*, c.*, e.emp_mail from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and (s.departamento = 'SISTEMAS DE INFORMACION' and s.periodo = c.Periodo or s.departamento = 'ALMACEN') and s.status = 'Interesado' order by id desc";
+        if(tipo == 'JI' && relacion == 'ORLS'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'ORLS' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'FRV'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'FRV' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'JJBP'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'JJBP' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'CNVS' || tipo == 'JI' && relacion == 'EMRP'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'CNVS' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'SCMG'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'SCMG' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'KAR' || tipo == 'JI' && relacion == 'MVHA' || tipo == 'JI' && relacion == 'JFVE' || tipo == 'JI' && relacion == 'YMGS' || tipo == 'JI' && relacion == 'FJTR'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'SCMG' and s.departamento = 'TECNICO' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'GHGS' || tipo == 'JI' && relacion == 'AGE'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GHGS' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'JBG' || tipo == 'JI' && relacion == 'GHGS'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'JBG' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'FLG'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'FLG' order by id desc";
         }
         // if(tipo == 'G'){
         //   consulta = "select u.*, s.* from cin_emp as u, [Vac.solicitud] as s where u.emp_cve = s.clave and (s.departamento = 'SISTEMAS DE INFORMACION' or s.departamento = 'ALMACEN') and s.status = 'Jefe Inmediato' order by id desc";
         // }
         if(tipo == 'RI'){
-          consulta = "select s.*, c.*, e.emp_mail from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status != 'Completado' and s.status != 'Rechazado' and s.status != 'Inhabil' order by id desc;";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status != 'Completado' and s.status != 'Rechazado' and s.status != 'Inhabil' order by id desc;";
+        }
+
+        if(tipo == 'JI' && relacion == 'TJRH'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'TJRH' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'JGH'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'MMM' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'GLR' || tipo == 'JI' && relacion == 'AOP'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'BHTC'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' and s.departamento = 'EMBARQUES Y EMPAQUES' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'JCJ'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' and (s.departamento = 'ALMACEN' or s.departamento = 'CONTROL DE PRODUCCION')  order by id desc";
         }
      
         // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
@@ -1180,13 +1333,14 @@ app.post('/reporteSolicitud', async (req, res) => {
     const mes = datosRecibidos.mes;
     const criterio = datosRecibidos.criterio.criterio;
     const tipoUsuario = datosRecibidos.tipo;
+    const rel_dep = datosRecibidos.relacion;
   
-    const result = await reporteConsultar(departamento, anio, mes, criterio, tipoUsuario);
+    const result = await reporteConsultar(departamento, anio, mes, criterio, tipoUsuario, rel_dep);
     // console.log(result);
     res.send(result);
 });
 
-async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, tipoUsuario) {
+async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, tipoUsuario, relacion) {
     try {
         await sql.connect(config);
         console.log('Conexión a SQL Server exitosa');
@@ -1208,6 +1362,7 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
         const dia = fechaActual.getDate();
 
         request.input('anioMes', sql.NVarChar, `%${año}%`);
+        request.input('relacion', sql.NVarChar, relacion);
 
         // Mostrar los componentes de la fecha
         // console.log(`Año: ${año}`);
@@ -1270,19 +1425,19 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
             }
         }
 
-        if(tipoUsuario == 'JI'){
+        if(tipoUsuario == 'JI' && relacion){
 
             if(paramDepto != '' && paramAnio == '' && paramMes == '' && paramCriterio == ''){
                 consulta = 'select a.*, s.* from [Vac.control_vacaciones] as a, [Vac.solicitud] as s where a.Clave = s.clave and a.Periodo = s.periodo and a.Departamento = @depto order by id desc';
             }
             if(paramDepto == '' && paramAnio != '' && paramMes == '' && paramCriterio == ''){
-                consulta = "select a.*, s.* from [Vac.control_vacaciones] as a, [Vac.solicitud] as s where a.Clave = s.clave and a.Periodo = s.periodo and s.fecha_solicitud like @anio and (a.Departamento = 'ALMACEN' or a.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select a.*, s.* from [Vac.control_vacaciones] as a, [Vac.solicitud] as s where a.Clave = s.clave and a.Periodo = s.periodo and s.fecha_solicitud like @anio and s.reldep = @relacion order by id desc";
             }
             if(paramDepto == '' && paramAnio == '' && paramMes != '' && paramCriterio == ''){
-                consulta = "select a.*, s.* from [Vac.control_vacaciones] as a, [Vac.solicitud] as s where a.Clave = s.clave and a.Periodo = s.periodo and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes and (a.Departamento = 'ALMACEN' or a.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select a.*, s.* from [Vac.control_vacaciones] as a, [Vac.solicitud] as s where a.Clave = s.clave and a.Periodo = s.periodo and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes and s.reldep = @relacion order by id desc";
             }
             if(paramDepto == '' && paramAnio == '' && paramMes == '' && paramCriterio != ''){
-                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and (u.Departamento = 'ALMACEN' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and s.reldep = @relacion order by id desc";
             }
 
             if(paramDepto != '' && paramAnio != '' && paramMes == '' && paramCriterio == ''){
@@ -1292,7 +1447,7 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
                 consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = s.clave and u.Periodo = s.periodo and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio order by id desc';
             }
             if(paramDepto == '' && paramAnio != '' && paramMes != '' && paramCriterio == ''){
-                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = s.clave and u.Periodo = s.periodo and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio and (u.Departamento = 'ALMACEN' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = s.clave and u.Periodo = s.periodo and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio and s.reldep = @relacion order by id desc";
             }
             if(paramDepto != '' && paramAnio == '' && paramMes != '' && paramCriterio == ''){
                 consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = s.clave and u.Periodo = s.periodo and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes order by id desc';
@@ -1302,10 +1457,10 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
                 consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and u.Departamento = @depto order by id desc';
             }
             if(paramDepto == '' && paramAnio != '' && paramMes == '' && paramCriterio != ''){
-                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and s.fecha_solicitud like @anio and (u.Departamento = 'ALMACEN' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and s.fecha_solicitud like @anio and s.reldep = @relacion order by id desc";
             }
             if(paramDepto == '' && paramAnio == '' && paramMes != '' && paramCriterio != ''){
-                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes and (u.Departamento = 'ALMACEN' or u.Departamento = 'SISTEMAS DE INFORMACION') order by id desc";
+                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes and s.reldep = @relacion order by id desc";
             }
             if(paramDepto != '' && paramAnio != '' && paramMes != '' && paramCriterio != ''){
                 consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio order by id desc';
@@ -1318,6 +1473,10 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
             if(paramDepto != '' && paramAnio != '' && paramMes == '' && paramCriterio != ''){
                 consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and u.Departamento = @depto and s.fecha_solicitud like @anio order by id desc';
             }
+            if(paramDepto == '' && paramAnio != '' && paramMes != '' && paramCriterio != ''){
+                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and s.fecha_solicitud like @mes and s.reldep = @relacion and s.fecha_solicitud like @anio order by id desc";
+            }
+
 
         }
 
@@ -1401,7 +1560,8 @@ app.post('/solicitudes', async (req, res) => {
     // console.log('Datos:', datosRecibidos);
     // res.status(200).send({ mensaje: 'Datos recibidos correctamente' });
     const tipo = datosRecibidos.tipo;
-    const data = await consultarSolicitudes(tipo);
+    const relacion = datosRecibidos.relacion;
+    const data = await consultarSolicitudes(tipo, relacion);
     res.send(data);
 });
 
@@ -1412,25 +1572,60 @@ app.post('/colaboradores-asociados', async (req, res) => {
     // res.status(200).send({ mensaje: 'Datos recibidos correctamente' });
     const tipo = datosRecibidos.tipo;
     const tipo_dep = datosRecibidos.tipo_dep;
-    const data = await consultarColAsociados(tipo, tipo_dep);
+    const departamento = datosRecibidos.depto;
+    const clave = datosRecibidos.clave;
+    const data = await consultarColAsociados(clave, tipo, tipo_dep, departamento);
     res.send(data);
 });
 
-async function consultarColAsociados(tipo, tipo_dep) {
+async function consultarColAsociados(clave, tipo, tipo_dep, departamento) {
     try {
         await sql.connect(config);
         console.log('Conexión a SQL Server exitosa');
      
         // Crear una solicitud (request)
         const request = new sql.Request();
+        request.input('depto', sql.NVarChar, departamento);
 
         var consulta = '';
 
-        if(tipo == 'S'){
-          
-          // consulta = "select * from cin_emp where Tipo = 'C'";
-            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and e.emp_tipo = 'C' and e.emp_status != 'B';"
-          // consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_status != 'B';"
+        // ****************** CONSULTA (CERAMICA, HORNOS, TERMINADO)
+        if(tipo == 'S' && tipo_dep == 'ORLS' && (clave != '200105' || clave != '200192')){
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'ORLS' and e.Descripcion = @depto;"
+        }
+        // ****************** CONSULTA (PUNTAS MONTADAS, SHELLACK)
+        if(tipo == 'S' && tipo_dep == 'ORLS' && (clave == '200105' || clave == '200192')){
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'ORLS' and (e.Descripcion = 'PUNTAS MONTADAS' or e.Descripcion = 'SHELLACK')"
+        }
+        // ****************** CONSULTA (HORNEROS)
+        if(tipo == 'S' && tipo_dep == 'FRV' && clave == '200178'){
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'FRV' and e.Descripcion = 'HORNEROS'"
+        }
+        // ****************** CONSULTA (ING.NVO.PROYECTOS REFRACTARIOS)
+        if(tipo == 'S' && tipo_dep == 'FRV' && clave == '200022'){
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'FRV' and e.Descripcion = 'ING.NVO.PROYECTOS REFRACTARIOS'"
+        }
+        // ****************** CONSULTA (MANTENIMIENTO)
+        if(tipo == 'S' && tipo_dep == 'FRV' && (clave == '200178' || clave == '200022' || clave == '200038' || clave == '200083' || clave == '200213' || clave == '200254')){
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'FRV' and e.Descripcion like 'MANTENIMIENTO%'"
+        }
+        // ****************** CONSULTA (REFRACTARIOS, ESPECIALIDADES REFRACTARIAS)
+        if(tipo == 'S' && tipo_dep == 'JJBP' && clave == '200005'){
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'JJBP' and (e.Descripcion = 'REFRACTARIOS' or e.Descripcion = 'ESPECIALIDADES REFRACTARIAS')"
+        }
+        // ****************** CONSULTA (CONTROL DE CALIDAD)
+        if(tipo == 'S' && tipo_dep == 'SCMG' && clave == '300043'){
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'SCMG' and e.Descripcion = 'CONTROL DE CALIDAD'"
+        }
+
+        // ****************** CONSULTA (EMBARQUES Y EMPAQUES)
+        if(tipo == 'S' && tipo_dep == 'GLR' && clave == '0200267'){
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'GLR' and e.Descripcion = 'EMBARQUES Y EMPAQUES'"
+        }
+
+        // ****************** CONSULTA (ALMACEN)
+        if(tipo == 'S' && tipo_dep == 'GLR' && clave == '300175'){
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'GLR' and (e.Descripcion = 'ALMACEN' or e.Descripcion = 'CONTROL DE PRODUCCION')"
         }
 
         if(tipo == 'RIA'){
@@ -1562,6 +1757,7 @@ app.post('/generar-inhabil', async (req, res) => {
         dias_oc = primerElemento.Vacaciones_tomadas + parseInt(datosRecibidos.cDias);
         dias_di = primerElemento.Saldo - parseInt(datosRecibidos.cDias);
         periodo = primerElemento.Periodo;
+        relacion = primerElemento.emp_reldep;
 
       // if(colaborador.Dias_disponibles_p2 != 0){
       //   dias_oc = parseInt(colaborador.Dias_ocupados_p2) + parseInt(datosRecibidos.cDias);
@@ -1596,7 +1792,7 @@ app.post('/generar-inhabil', async (req, res) => {
       const clave = primerElemento.Clave.toString();
       const dep = primerElemento.Departamento;
       // await enviarCorreo();
-      respuesta = await insertarSolicitudMasiva(nombre,fecha,dias,fechaA,fechaH,tpermiso1,motivo,firmaInt,clave,tpermiso2,tpermiso3,tpermiso4,tipo_solicitud, dep, dias_o, dias_d, periodo);
+      respuesta = await insertarSolicitudMasiva(nombre,fecha,dias,fechaA,fechaH,tpermiso1,motivo,firmaInt,clave,tpermiso2,tpermiso3,tpermiso4,tipo_solicitud, dep, dias_o, dias_d, periodo, relacion);
         }
     }
     await sql.close();
@@ -1618,10 +1814,10 @@ async function consultaGeneral() {
     console.log('Conexión a SQL Server exitosa');
     // Crear una solicitud (request)
     const request = new sql.Request();
-    var consulta = "select * from [Vac.control_vacaciones]";
+    var consulta = "select e.emp_reldep, c.* from [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = e.emp_cve";
     // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
     const result = await request.query(consulta);
-    // console.log('Datos de la consulta:', result.recordset);
+    console.log('Datos de la consulta:', result.recordset);
     const data = result.recordset;
     // Cerrar la conexión
     await sql.close();
@@ -1632,7 +1828,7 @@ async function consultaGeneral() {
   }
 }
 
-async function insertarSolicitudMasiva(paramUno, paramDos, paramTres, paramCuatro, paramCinco, paramSeis, paramSiete, paramOcho, paramNueve, paramDiez, paramOnce, paramDoce, paramTrece, paramCatorce, paramQuince, paramDiesiseis, paramDiesisiete) {
+async function insertarSolicitudMasiva(paramUno, paramDos, paramTres, paramCuatro, paramCinco, paramSeis, paramSiete, paramOcho, paramNueve, paramDiez, paramOnce, paramDoce, paramTrece, paramCatorce, paramQuince, paramDiesiseis, paramDiesisiete, paramDiesiocho) {
     try {
         await sql.connect(config);
         console.log('Conexión a SQL Server exitosa');
@@ -1653,6 +1849,7 @@ async function insertarSolicitudMasiva(paramUno, paramDos, paramTres, paramCuatr
         request.input('firmaInt', sql.NVarChar, paramOcho);
         request.input('clave', sql.NVarChar, paramNueve);
         request.input('dep', sql.NVarChar, paramCatorce);
+        request.input('reldep', sql.NVarChar, paramDiesiocho);
 
         request.input('dias_o', sql.NVarChar, paramQuince);
         request.input('dias_d', sql.NVarChar, paramDiesiseis);
@@ -1679,7 +1876,7 @@ async function insertarSolicitudMasiva(paramUno, paramDos, paramTres, paramCuatr
         request.input('date', sql.NVarChar, formatoEnEspanol);
         request.input('periodo', sql.NVarChar, paramDiesisiete);
 
-        const result = await request.query("INSERT INTO [Vac.solicitud] (clave, nombre, departamento, fecha_solicitud, tipo_solicitud, cuantos_dias, fecha_apartir, fecha_hasta, con_sueldo, sin_sueldo, sindicalizado, no_sindicalizado, motivo, firma_interesado, firma_jefe_in, firma_gerente, status, periodo, genera) VALUES (@clave, @nombre, @dep, @fecha, @tipo_sol, @dias, @fechaA, @fechaH, @permiso1, @permiso2, @permiso3, @permiso4, @motivo, @date, @date, @date, 'Completado', @periodo, @clave)");
+        const result = await request.query("INSERT INTO [Vac.solicitud] (clave, nombre, departamento, fecha_solicitud, tipo_solicitud, cuantos_dias, fecha_apartir, fecha_hasta, con_sueldo, sin_sueldo, sindicalizado, no_sindicalizado, motivo, firma_interesado, firma_jefe_in, firma_gerente, status, periodo, genera, reldep) VALUES (@clave, @nombre, @dep, @fecha, @tipo_sol, @dias, @fechaA, @fechaH, @permiso1, @permiso2, @permiso3, @permiso4, @motivo, @date, @date, @date, 'Completado', @periodo, @clave, @reldep)");
         // const resultUpdate = await request.query("UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Pendiente' WHERE Clave = @clave");
         // const resultUpdateColaborador = await request.query("UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles = @dias_d, Dias_ocupados = @dias_o WHERE Clave = @clave");
         const resultUpdateColaborador = await request.query("UPDATE cin_emp SET emp_estsol = 'Disponible' WHERE emp_cve = @clave");
