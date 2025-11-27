@@ -2357,6 +2357,59 @@ async function firmarTodoRI(paramUno, paramDos, paramTres, paramSeis, paramSiete
     }
 }
 
+// ******************* CAMBIAR CONTRASEÑA *********************************************************************------>
+app.post('/editar-contrasena', async (req, res) => {
+    var datosRecibidos = req.body;
+    console.log('Datos del frontend:', datosRecibidos);
+    const numero_empleado = datosRecibidos.no_emp;
+    const contrasena_actual = datosRecibidos.cont_act;
+    const nueva_contrasena = datosRecibidos.nu_cont;
+
+    const respuesta = await updateContrasena(numero_empleado, contrasena_actual, nueva_contrasena);
+
+    var resAlFrondend;
+    if(respuesta.rowsAffected >= 1){
+       resAlFrondend = true;
+    }else{
+       resAlFrondend = false;
+    }
+
+    res.send(resAlFrondend);
+})
+
+async function updateContrasena(paramUno, paramDos, paramTres) {
+    try {
+        await sql.connect(config);
+        console.log('Conexión a SQL Server exitosa');
+     
+        // Crear una solicitud (request)
+        const request = new sql.Request();
+
+        request.input('clave', sql.NVarChar, paramUno);
+        request.input('contrasena_actual', sql.NVarChar, paramDos);
+        request.input('nueva_contrasena', sql.NVarChar, paramTres);
+
+        // await enviarCorreoRechazado();
+
+        const resultado = await request.query("UPDATE cin_emp SET emp_pass = @nueva_contrasena where emp_cve = @clave and emp_pass = @contrasena_actual");
+     
+        if(resultado){
+          console.log("Contraseña modificada con exito");
+          // await enviarCorreo();
+        }
+       
+        // Cerrar la conexión
+        await sql.close();
+        // console.log('Conexión cerrada');
+        // console.log(data);
+        return resultado;
+                
+        } catch (err) {
+        console.error('Error al conectar o consultar:', err);
+    }
+}
+// *********************************************************************************************************************
+
 // Incluir archivos de ruta 
 const  usersRoute = require ( './routes/api/users' ); 
 
