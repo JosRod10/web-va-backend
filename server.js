@@ -90,7 +90,7 @@ async function generarPeriodo() {
         const result = await request.query("SELECT * FROM [Vac.control_vacaciones] WHERE DATEPART(MONTH, Fecha_ingreso) = DATEPART(MONTH, GETDATE()) AND DATEPART(DAY, Fecha_ingreso) = DATEPART(DAY, GETDATE())");
 
         if(result){
-          console.log(result.recordset);
+          // console.log(result.recordset);
           // await enviarCorreoInsertado(paramUno, paramTres, paramCuatro, paramCinco, permiso1, permiso2, permiso3, permiso4, paramSiete, paramTrece);
           for(let colaborador of result.recordset){
 
@@ -753,7 +753,7 @@ function convertirFechaASQL(fechaString) {
 
 app.post('/form', async (req, res) => {
     const datosRecibidos = req.body;
-    console.log('Datos del frontend:', datosRecibidos);
+    // console.log('Datos del frontend:', datosRecibidos);
     const nombre = datosRecibidos.nombre;
     const fecha = datosRecibidos.fecha;
     const dias = datosRecibidos.cDias;
@@ -838,7 +838,7 @@ async function insertarSolicitud(paramUno, paramDos, paramTres, paramCuatro, par
         const formatoEnEspanol = new Intl.DateTimeFormat('es-MX', opcionesDeFormato).format(tiempoEjecucion);
 
         // 4. Imprime el resultado.
-        console.log('La función se ejecutó el:' + formatoEnEspanol);
+        // console.log('La función se ejecutó el:' + formatoEnEspanol);
         request.input('date', sql.NVarChar, formatoEnEspanol);
 
         // const tiempoEjecucion = new Date(); 
@@ -964,7 +964,7 @@ async function updateJefeInmediato(paramUno, paramDos, paramTres, paramCuatro, p
         const formatoEnEspanol = new Intl.DateTimeFormat('es-MX', opcionesDeFormato).format(tiempoEjecucion);
 
         // 4. Imprime el resultado.
-        console.log('La función se ejecutó el:' + formatoEnEspanol);
+        // console.log('La función se ejecutó el:' + formatoEnEspanol);
         request.input('date', sql.NVarChar, formatoEnEspanol);
 
         const query = "UPDATE [Vac.solicitud] SET firma_jefe_in = @date, status = 'Jefe Inmediato' WHERE id = @id"
@@ -1075,7 +1075,7 @@ async function updateGerente(paramUno, paramDos, paramTres, paramCuatro, paramCi
         const formatoEnEspanol = new Intl.DateTimeFormat('es-MX', opcionesDeFormato).format(tiempoEjecucion);
 
         // 4. Imprime el resultado.
-        console.log('La función se ejecutó el:' + formatoEnEspanol);
+        // console.log('La función se ejecutó el:' + formatoEnEspanol);
         request.input('date', sql.NVarChar, formatoEnEspanol);
 
         const query = "UPDATE solicitud_vacaciones SET firms_gerente = @date, status = 'Gerente' WHERE id = @id"
@@ -1162,7 +1162,7 @@ async function aceptarRI(paramUno) {
 
 app.post('/aprobar', async (req, res) => {
     const datosRecibidos = req.body;
-    console.log('Datos del frontend:', datosRecibidos);
+    // console.log('Datos del frontend:', datosRecibidos);
     const id = datosRecibidos.id;
     const accion = datosRecibidos.accion;
     const dias_d = datosRecibidos.dias_d != null ? datosRecibidos.dias_d.toString() : '0';
@@ -1212,7 +1212,7 @@ async function aprobarSolicitud(paramUno, paramDos, paramTres, paramCuatro, para
           queryCuatro = "SELECT emp_mail from cin_emp where emp_cve = @Clave_genera";
           const result_mail = await request.query(queryCuatro);
           email_genera = result_mail.recordset[0].emp_mail
-          console.log('Correo para enviar: ', email_genera);
+          // console.log('Correo para enviar: ', email_genera);
         }
         if(paramDos == 1){
           queryUpdateUno = "UPDATE [Vac.solicitud] SET status = 'Completado' WHERE id = @id"
@@ -1361,7 +1361,7 @@ async function consultarSolicitudes(tipo, relacion) {
         // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
         const result = await request.query(consulta);
      
-        console.log('Datos de la consulta:', result.recordset);
+        // console.log('Datos de la consulta:', result.recordset);
         const data = result.recordset;
                 
      
@@ -1868,7 +1868,7 @@ async function consultaGeneral() {
     var consulta = "select e.emp_reldep, c.* from [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = e.emp_cve";
     // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
     const result = await request.query(consulta);
-    console.log('Datos de la consulta:', result.recordset);
+    // console.log('Datos de la consulta:', result.recordset);
     const data = result.recordset;
     // Cerrar la conexión
     await sql.close();
@@ -1923,7 +1923,7 @@ async function insertarSolicitudMasiva(paramUno, paramDos, paramTres, paramCuatr
         const formatoEnEspanol = new Intl.DateTimeFormat('es-MX', opcionesDeFormato).format(tiempoEjecucion);
 
         // 4. Imprime el resultado.
-        console.log('La función se ejecutó el:' + formatoEnEspanol);
+        // console.log('La función se ejecutó el:' + formatoEnEspanol);
         request.input('date', sql.NVarChar, formatoEnEspanol);
         request.input('periodo', sql.NVarChar, paramDiesisiete);
 
@@ -2050,7 +2050,7 @@ async function updateJefeInmediatoTodas(paramUno, paramDos, paramTres, paramCuat
         const formatoEnEspanol = new Intl.DateTimeFormat('es-MX', opcionesDeFormato).format(tiempoEjecucion);
 
         // 4. Imprime el resultado.
-        console.log('La función se ejecutó el:' + formatoEnEspanol);
+        // console.log('La función se ejecutó el:' + formatoEnEspanol);
         request.input('date', sql.NVarChar, formatoEnEspanol);
 
         const query = "UPDATE [Vac.solicitud] SET firma_jefe_in = @date, status = 'Jefe Inmediato' WHERE id = @id"
@@ -2119,13 +2119,13 @@ async function rechazarSolicitudesTodas(paramUno) {
 
             var resultUno = await request.query(queryUpdateUno);
             if (resultUno) {
-              console.log(`Solicitud con id ${id} modificada con éxito.`);
+              // console.log(`Solicitud con id ${id} modificada con éxito.`);
               // await enviarCorreoRechazado();
             }
 
             var resultDos = await request.query(queryUpdateDos);
             if (resultDos) {
-              console.log(`Colaborador con clave ${clave} modificado con éxito.`);
+              // console.log(`Colaborador con clave ${clave} modificado con éxito.`);
             }
           } catch (error) {
             console.error(`Error procesando colaborador ${clave}:`, error);
@@ -2147,7 +2147,7 @@ async function rechazarSolicitudesTodas(paramUno) {
 app.post('/aceptar-todas', async (req, res) => {
     var datosRecibidos = req.body;
     var respuesta;
-    console.log(datosRecibidos);
+    // console.log(datosRecibidos);
     for (const colaborador of datosRecibidos) {
       // console.log('Datos del frontend:', datosRecibidos);
       respuesta = await updateColaboradorTodasAceptar(colaborador.id);
@@ -2280,7 +2280,7 @@ async function updateGerenteTodas(paramUno, paramDos, paramTres, paramCuatro, pa
         const formatoEnEspanol = new Intl.DateTimeFormat('es-MX', opcionesDeFormato).format(tiempoEjecucion);
 
         // 4. Imprime el resultado.
-        console.log('La función se ejecutó el:' + formatoEnEspanol);
+        // console.log('La función se ejecutó el:' + formatoEnEspanol);
         request.input('date', sql.NVarChar, formatoEnEspanol);
 
         const query = "UPDATE solicitud_vacaciones SET firms_gerente = @date, status = 'Gerente' WHERE id = @id"
@@ -2319,7 +2319,7 @@ async function updateGerenteTodas(paramUno, paramDos, paramTres, paramCuatro, pa
 
 app.post('/firmar-todas-ri', async (req, res) => {
     const solicitudes = req.body;
-    console.log('Datos del frontend:', solicitudes);
+    // console.log('Datos del frontend:', solicitudes);
     var respuesta;
     for(let solicitud of solicitudes){
 
@@ -2411,7 +2411,7 @@ async function firmarTodoRI(paramUno, paramDos, paramTres, paramSeis, paramSiete
 // ******************* CAMBIAR CONTRASEÑA *********************************************************************------>
 app.post('/editar-contrasena', async (req, res) => {
     var datosRecibidos = req.body;
-    console.log('Datos del frontend:', datosRecibidos);
+    // console.log('Datos del frontend:', datosRecibidos);
     const numero_empleado = datosRecibidos.no_emp;
     const contrasena_actual = datosRecibidos.cont_act;
     const nueva_contrasena = datosRecibidos.nu_cont;
@@ -2464,7 +2464,7 @@ async function updateContrasena(paramUno, paramDos, paramTres) {
 //+++++++++++++++++++++++++++++++ ENVIAR CORREOS CON USUARIO Y CONTRASEÑA MASIVO +++++++++++++++++++++++++++++++++++++++
 app.post('/enviar-correos', async (req, res) => {
     var senal = req.body;
-    console.log('Datos del frontend:', senal);
+    // console.log('Datos del frontend:', senal);
     const colaboradores = await consultaUsuarios();
     var respuesta;
     for(let colaborador of colaboradores){
@@ -2485,7 +2485,7 @@ async function consultaUsuarios() {
     // var consulta = "select emp_cve, emp_nom, emp_mail, emp_tipo, emp_reldep, emp_usu, emp_pass from cin_emp where emp_cve = '300292'";
     // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
     const result = await request.query(consulta);
-    console.log('Datos de la consulta:', result.recordset);
+    // console.log('Datos de la consulta:', result.recordset);
     const data = result.recordset;
     // Cerrar la conexión
     await sql.close();

@@ -18,7 +18,7 @@ async function conectarYConsultar() {
         // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
         const result = await request.query('SELECT * FROM Users');
      
-        console.log('Datos de la consulta:', result.recordset);
+        // console.log('Datos de la consulta:', result.recordset);
         const data = result.recordset;
                 
      
