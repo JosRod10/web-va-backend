@@ -100,8 +100,8 @@ async function generarPeriodo() {
 
             periodo_siguiente = sumPeriodo.toString();
             anios = colaborador.Años + 1;
-            vacaciones = anios == 1 ? 12 : anios == 2 ? 13 : anios == 3 ? 14 : 0;
-            sabados = vacaciones < 18 ? 2 : 3;
+            vacaciones = anios == 1 ? 12 : anios == 2 ? 14 : anios == 3 ? 16 : anios == 4 ? 18 : anios == 5 ? 20 : anios == 6 ? 22 : anios == 7 ? 22 : anios == 8 ? 22 : anios == 9 ? 22 : anios == 10 ? 22 : anios == 11 ? 24 : anios == 12 ? 24 : anios == 13 ? 24 : anios == 14 ? 24 : anios == 15 ? 24 : anios == 16 ? 26 : anios == 17 ? 26 : anios == 18 ? 26 : anios == 19 ? 26 : anios == 20 ? 26 : anios == 21 ? 28 : anios == 22 ? 28 : anios == 23 ? 28 : anios == 24 ? 28 : anios == 25 ? 28 : anios == 26 ? 30 : anios == 27 ? 30 : anios == 28 ? 30 : anios == 29 ? 30 : anios == 30 ? 30 : anios == 31 ? 32 : anios == 32 ? 32 : anios == 33 ? 32 : anios == 34 ? 32 : anios == 35 ? 32 : anios == 36 ? 34 : anios == 37 ? 34 : anios == 38 ? 34 : anios == 39 ? 34 : anios == 40 ? 34 : anios == 41 ? 36 : anios == 42 ? 36 : anios == 43 ? 36 : anios == 44 ? 36 : anios == 45 ? 36 : anios == 46 ? 38 : anios == 47 ? 38 : anios == 48 ? 38 : anios == 49 ? 38 : anios == 50 ? 38 : anios == 51 ? 40 : anios == 52 ? 40 : anios == 53 ? 40 : anios == 54 ? 40 : anios == 55 ? 40 : anios == 56 ? 42 : anios == 57 ? 42 : anios == 58 ? 42 : anios == 59 ? 42 : 0;
+            sabados = vacaciones < 18 ? 2 : (vacaciones >= 18 && vacaciones <= 22) ? 3 : (vacaciones >= 24 && vacaciones <= 28) ? 4 : (vacaciones >= 30 && vacaciones <= 36) ? 5 : (vacaciones >= 38 && vacaciones <= 40) ? 6 : vacaciones == 42 ? 7 : 0;
             dias_disfrutar = vacaciones - sabados;
 
             request.input('clv', sql.Int, clave);
@@ -649,6 +649,57 @@ async function enviarCorreoVacacionesVencer(paramUno, paramDos, paramTres) {
   } catch (error) {
     console.error(error);
   }
+}
+
+//**************************************** CORREO CON USUARIOS Y CONTRASEÑAS *******************************/
+
+async function enviarCorreoUsuarioContrasena(nombre, mail, usuario, contrasena, tipo){
+  var tipo_usuario;
+    // console.log('Email')
+  // Crear transportador
+  let transporter = nodemailer.createTransport({
+    host: 'mail.cinasa.com.mx',
+    port: 587,
+    secure: false,
+    auth: {
+      user: 'vacaciones@cinasa.com.mx',
+      pass: 'mrmygNyhmyktUrqcJs7q'
+    },
+
+    // tls: {
+    //     ciphers:''
+    // }
+    //SSL V3, TLS V1.0, TLS V1.1, TLS V1.2, and TLS V1.3
+  });
+  
+  tipo_usuario = tipo == 'C'? 'ADMINISTRATIVO' : tipo == 'S'? 'SUPERVISOR' : tipo == 'JI'? 'JEFE INMEDIATO' : tipo == 'RI'? 'RELACIONES INDUSTRIALES' : 'NO DEFINIDO';
+
+  // Definir opciones del correo
+  let mailOptions = {
+    from: 'vacaciones@cinasa.com.mx',
+    to: mail,
+    // to: 'jarodriguez@cinasa.com.mx',
+    subject: 'Notificación',
+    text: 'Cuerpo del correo en texto plano',
+    html: 'Buen día ' + '<b>' +  nombre + '</b>.<br>' + 'Comparto tu acceso como ' + '<b>' +  tipo_usuario + '</b>' + ' a la nueva ' + '<b>' + 'Plataforma de Vacaciones.' + '</b><br><br>' + '<b>Usuario: </b>' + usuario + '<br>' + '<b>Contraseña: </b>' + contrasena + '<br><br>' + 'Si deseas cambiar tu contraseña, los pasos a seguir los encuentras en el ' + '<b>Manual de Usuario</b>' + ' habilitado en la plataforma como se muestra a continuación.<br>' + '<img src="cid:imagen_login" alt="Login"><br>' + 'Adicional a lo anterior, informarte que, debido al proceso de transición, ' + '<b>los formatos físicos de vacaciones únicamente se recibirán hasta el día 10 de diciembre.</b>' + ' Posterior a esta fecha, todas las solicitudes deberán realizarse exclusivamente a través de la nueva plataforma.<br><br>' + 'Cualquier duda comunícate con el área de ' + '<b>Sistemas</b>' + ' o ' + '<b>Relaciones Industriales</b>.<br><br>' + 'Saludos.',
+    attachments: [
+      {
+        filename: 'login.png',
+        path: 'attachments/login.png', // Ruta local de tu imagen
+        cid: 'imagen_login'
+      },
+    ]
+  };
+
+  // Enviar correo
+  try {
+    let info = await transporter.sendMail(mailOptions);
+    console.log('Mensaje enviado: %s', info.messageId);
+  } catch (error) {
+    console.error(error);
+  }
+
+
 }
 
 // ****************************************************************************************************************
@@ -2409,6 +2460,42 @@ async function updateContrasena(paramUno, paramDos, paramTres) {
     }
 }
 // *********************************************************************************************************************
+
+//+++++++++++++++++++++++++++++++ ENVIAR CORREOS CON USUARIO Y CONTRASEÑA MASIVO +++++++++++++++++++++++++++++++++++++++
+app.post('/enviar-correos', async (req, res) => {
+    var senal = req.body;
+    console.log('Datos del frontend:', senal);
+    const colaboradores = await consultaUsuarios();
+    var respuesta;
+    for(let colaborador of colaboradores){
+      respuesta = await enviarCorreoUsuarioContrasena(colaborador.emp_nom, colaborador.emp_mail, colaborador.emp_usu, colaborador.emp_pass, colaborador.emp_tipo);
+    }
+    console.log('Lista iterada por completo');
+
+    res.send(true);
+})
+
+async function consultaUsuarios() {
+  try {
+    await sql.connect(config);
+    console.log('Conexión a SQL Server exitosa');
+    // Crear una solicitud (request)
+    const request = new sql.Request();
+    var consulta = "select emp_cve, emp_nom, emp_mail, emp_tipo, emp_reldep, emp_usu, emp_pass from cin_emp where emp_mail ! = ''";
+    // var consulta = "select emp_cve, emp_nom, emp_mail, emp_tipo, emp_reldep, emp_usu, emp_pass from cin_emp where emp_cve = '300292'";
+    // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
+    const result = await request.query(consulta);
+    console.log('Datos de la consulta:', result.recordset);
+    const data = result.recordset;
+    // Cerrar la conexión
+    await sql.close();
+    console.log('Conexión cerrada');
+    return data;    
+  } catch (err) {
+    console.error('Error al conectar o consultar:', err);
+  }
+}
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 // Incluir archivos de ruta 
 const  usersRoute = require ( './routes/api/users' ); 
