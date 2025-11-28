@@ -30,7 +30,7 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.json()); // Middleware para analizar JSON
 // Ejemplo que define una ruta en
 app.get ( '/' , ( req, res ) => { 
-    res.send ( '<h1>Backend con Node js y Express js</h1>' ); 
+    res.send ( '<h1>Conectado al servidor Formato de Vacaciones</h1>' ); 
 });
 
 ///************************************* AUSENTAR COLABORADORES ******************************************************* */
