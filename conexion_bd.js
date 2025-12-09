@@ -34,9 +34,10 @@ const config = {
 //     options: {
 //         port: 1433,
 //         trustServerCertificate: true,
-//         cryptoCredentialsDetails: {
-//             minVersion: 'TLSv1' // Permite versiones de TLS más antiguas, como TLS 1.0
-//         }
+//         // cryptoCredentialsDetails: {
+//         //     minVersion: 'TLSv1' // Permite versiones de TLS más antiguas, como TLS 1.0
+//         // },
+//         encrypt: false, // Disable SSL/TLS
 //     },
 
 // };

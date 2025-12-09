@@ -156,7 +156,7 @@ async function consultaVacacionesVencer() {
         const request = new sql.Request();
      
         // const result = await request.query("SELECT * FROM [Vac.control_vacaciones] as c, cin_emp as e WHERE Saldo != 0 AND DATEADD(month, -1, DATEADD(year, 1, Fecha_ingreso)) = CAST(GETDATE() AS DATE) and e.emp_cve =  TRY_CONVERT(nvarchar,c.Clave)");
-          const result = await request.query("SELECT * FROM [Vac.control_vacaciones] as c, cin_emp as e WHERE e.emp_cve =  TRY_CONVERT(nvarchar,c.Clave) and DATEADD(MONTH, 1, CAST(GETDATE() AS DATE)) = CASE WHEN DATEFROMPARTS(YEAR(CAST(GETDATE() AS DATE)), MONTH(c.Fecha_ingreso), DAY(c.Fecha_ingreso)) >= CAST(GETDATE() AS DATE) THEN DATEFROMPARTS(YEAR(CAST(GETDATE() AS DATE)), MONTH(c.Fecha_ingreso), DAY(c.Fecha_ingreso)) ELSE DATEFROMPARTS(YEAR(CAST(GETDATE() AS DATE)) + 1, MONTH(c.Fecha_ingreso), DAY(c.Fecha_ingreso)) END;");
+          const result = await request.query("SELECT * FROM [Vac.control_vacaciones] as c, cin_emp as e WHERE e.emp_cve =  TRY_CONVERT(nvarchar,c.Clave) and DATEADD(MONTH, 2, CAST(GETDATE() AS DATE)) = CASE WHEN DATEFROMPARTS(YEAR(CAST(GETDATE() AS DATE)), MONTH(c.Fecha_ingreso), DAY(c.Fecha_ingreso)) >= CAST(GETDATE() AS DATE) THEN DATEFROMPARTS(YEAR(CAST(GETDATE() AS DATE)), MONTH(c.Fecha_ingreso), DAY(c.Fecha_ingreso)) ELSE DATEFROMPARTS(YEAR(CAST(GETDATE() AS DATE)) + 1, MONTH(c.Fecha_ingreso), DAY(c.Fecha_ingreso)) END;");
         if(result){
           // console.log(result.recordset);
           // await enviarCorreoInsertado(paramUno, paramTres, paramCuatro, paramCinco, permiso1, permiso2, permiso3, permiso4, paramSiete, paramTrece);
@@ -339,7 +339,7 @@ async function enviarCorreo(nombre, dias, de, a, permiso1, permiso2, permiso3, p
     // to: 'jarodriguez@cinasa.com.mx',
     subject: 'Notificación Solicitud',
     text: 'Cuerpo del correo en texto plano',
-    html: '<b>' + 'Tipo de solicitud: ' + tipo_solicitud + '</b><br><br>' + '<b>' + nombre + ' ' + 'a solicitado' + ' ' + dias + ' ' + 'día(s) a partir del' + ' ' + de + ' ' + 'al' + ' ' + a + ' ' + permiso1 + ' ' + permiso2 + ' ' + permiso3 + ' ' + permiso4 + '.' + '<b><br><br>' + 'Motivo: ' + motivo + '</b><br><br>' + '<b>' + 'Favor de ingresar a' + ' ' + 'http://localhost:4200/login' + ' ' + 'para realizar una acción.' + '</b>' + '<br><br><b>' + ' ' + 'Saludos!' + '</b>'
+    html: '<b>' + 'Tipo de solicitud: ' + tipo_solicitud + '</b><br><br>' + '<b>' + nombre + ' ' + 'a solicitado' + ' ' + dias + ' ' + 'día(s) a partir del' + ' ' + de + ' ' + 'al' + ' ' + a + ' ' + permiso1 + ' ' + permiso2 + ' ' + permiso3 + ' ' + permiso4 + '.' + '<b><br><br>' + 'Motivo: ' + motivo + '</b><br><br>' + '<b>' + 'Favor de ingresar a' + ' ' + 'http://199.5.83.248/Vacaciones' + ' ' + 'para realizar una acción.' + '</b>' + '<br><br><b>' + ' ' + 'Saludos!' + '</b>'
   };
 
   // Enviar correo
@@ -372,7 +372,7 @@ async function enviarCorreo(nombre, dias, de, a, permiso1, permiso2, permiso3, p
     return fechaFormateada
   }
 
-async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, permiso3, permiso4, motivo, tipo_solicitud, jefe) {
+async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, permiso3, permiso4, motivo, tipo_solicitud, jefe, clave) {
 
   const fecha_a = await convertirFecha(de);
   const fecha_h = await convertirFecha(a);
@@ -390,8 +390,11 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
 
   });
 
-  if(jefe == 'GLR'){
+  if(jefe == 'GLR' && clave != '300050'){
     correo = 'glechuga@cinasa.com.mx';
+  }
+  if(jefe == 'GLR' && clave == '300050'){
+    correo = 'jbustos@cinasa.com.mx';
   }
   if(jefe == 'KAR'){
     correo = 'kalcantara@cinasa.com.mx';
@@ -417,8 +420,11 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
   if(jefe == 'JBG'){
     correo = 'jbustos@cinasa.com.mx';
   }
-  if(jefe == 'SCMG'){
+  if(jefe == 'SCMG' && clave != '300024'){
     correo = 'smanzo@cinasa.com.mx';
+  }
+  if(jefe == 'SCMG' && clave == '300024'){
+    correo = 'jadame@cinasa.com.mx';
   }
   if(jefe == 'GHGS'){
     correo = 'hgutierrez@cinasa.com.mx';
@@ -462,7 +468,7 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
     // to: 'jarodriguez@cinasa.com.mx',
     subject: 'Notificación Solicitud',
     text: 'Cuerpo del correo en texto plano',
-    html: '<b>' + 'Tipo de solicitud: ' + tipo_solicitud + '</b><br><br>' + '<b>' + nombre + ' ' + 'a solicitado' + ' ' + dias + ' ' + 'día(s) a partir del' + ' ' + fecha_a + ' ' + 'al' + ' ' + fecha_h + ' ' + permiso1 + ' ' + permiso2 + ' ' + permiso3 + ' ' + permiso4 + '.' + '<b><br><br>' + 'Motivo: ' + motivo + '</b><br><br>' + '<b>' + 'Favor de ingresar a' + ' ' + 'http://localhost:4200/login' + ' ' + 'para realizar una acción.' + '</b>' + '<br><br><b>' + ' ' + 'Saludos!' + '</b>'
+    html: '<b>' + 'Tipo de solicitud: ' + tipo_solicitud + '</b><br><br>' + '<b>' + nombre + ' ' + 'a solicitado' + ' ' + dias + ' ' + 'día(s) a partir del' + ' ' + fecha_a + ' ' + 'al' + ' ' + fecha_h + ' ' + permiso1 + ' ' + permiso2 + ' ' + permiso3 + ' ' + permiso4 + '.' + '<b><br><br>' + 'Motivo: ' + motivo + '</b><br><br>' + '<b>' + 'Favor de ingresar a' + ' ' + 'http://199.5.83.248/Vacaciones' + ' ' + 'para realizar una acción.' + '</b>' + '<br><br><b>' + ' ' + 'Saludos!' + '</b>'
   };
 
   // Enviar correo
@@ -681,7 +687,7 @@ async function enviarCorreoUsuarioContrasena(nombre, mail, usuario, contrasena, 
     // to: 'jarodriguez@cinasa.com.mx',
     subject: 'Notificación',
     text: 'Cuerpo del correo en texto plano',
-    html: 'Buen día ' + '<b>' +  nombre + '</b>.<br>' + 'Comparto tu acceso como ' + '<b>' +  tipo_usuario + '</b>' + ' a la nueva ' + '<b>' + 'Plataforma de Vacaciones.' + '</b><br><br>' + '<b>Usuario: </b>' + usuario + '<br>' + '<b>Contraseña: </b>' + contrasena + '<br><br>' + 'Si deseas cambiar tu contraseña, los pasos a seguir los encuentras en el ' + '<b>Manual de Usuario</b>' + ' habilitado en la plataforma como se muestra a continuación.<br>' + '<img src="cid:imagen_login" alt="Login"><br>' + 'Adicional a lo anterior, informarte que, debido al proceso de transición, ' + '<b>los formatos físicos de vacaciones únicamente se recibirán hasta el día 10 de diciembre.</b>' + ' Posterior a esta fecha, todas las solicitudes deberán realizarse exclusivamente a través de la nueva plataforma.<br><br>' + 'Cualquier duda comunícate con el área de ' + '<b>Sistemas</b>' + ' o ' + '<b>Relaciones Industriales</b>.<br><br>' + 'Saludos.',
+    html: 'Buen día ' + '<b>' +  nombre + '</b>.<br>' + 'Comparto tu acceso como ' + '<b>' +  tipo_usuario + '</b>' + ' a la nueva ' + '<b>' + 'Plataforma de Vacaciones,' + '</b> ya disponible en <b>Intranet</b> en el apartado de <b>Relaciones Industriales.</b><br><br>' + '<b>Usuario: </b>' + usuario + '<br>' + '<b>Contraseña: </b>' + contrasena + '<br><br>' + 'Si deseas cambiar tu contraseña, los pasos a seguir los encuentras en el ' + '<b>Manual de Usuario</b>' + ' habilitado en la plataforma como se muestra a continuación.<br>' + '<img src="cid:imagen_login" alt="Login"><br>' + 'Adicional a lo anterior, informarte que, debido al proceso de transición, ' + '<b>los formatos físicos de vacaciones únicamente se recibirán hasta el día 10 de diciembre.</b>' + ' Posterior a esta fecha, todas las solicitudes deberán realizarse exclusivamente a través de la nueva plataforma.<br><br>' + 'Cualquier duda comunícate con el área de ' + '<b>Sistemas</b>' + ' o ' + '<b>Relaciones Industriales</b>.<br><br>' + 'Saludos.',
     attachments: [
       {
         filename: 'login.png',
@@ -878,7 +884,7 @@ async function insertarSolicitud(paramUno, paramDos, paramTres, paramCuatro, par
 
         if(result){
           console.log("Insertado con exito");
-          await enviarCorreoInsertado(paramUno, paramTres, paramCuatro, paramCinco, permiso1, permiso2, permiso3, permiso4, paramSiete, paramTrece, paramVeite);
+          await enviarCorreoInsertado(paramUno, paramTres, paramCuatro, paramCinco, permiso1, permiso2, permiso3, permiso4, paramSiete, paramTrece, paramVeite, paramNueve);
         }
        
         // Cerrar la conexión
@@ -1313,7 +1319,7 @@ async function consultarSolicitudes(tipo, relacion) {
         }
 
         if(tipo == 'JI' && relacion == 'SCMG'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'SCMG' order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'SCMG' and s.clave != 300024 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'KAR' || tipo == 'JI' && relacion == 'MVHA' || tipo == 'JI' && relacion == 'JFVE' || tipo == 'JI' && relacion == 'YMGS' || tipo == 'JI' && relacion == 'FJTR'){     
@@ -1346,8 +1352,12 @@ async function consultarSolicitudes(tipo, relacion) {
           consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'MMM' order by id desc";
         }
 
-        if(tipo == 'JI' && relacion == 'GLR' || tipo == 'JI' && relacion == 'AOP'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' order by id desc";
+        if(tipo == 'JI' && relacion == 'GLR'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'GLR' or s.reldep = 'AOP') and s.clave != 300050 order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'AOP'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' and (s.clave != 300050 and s.clave != 300034)  order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'BHTC'){     
@@ -1356,6 +1366,11 @@ async function consultarSolicitudes(tipo, relacion) {
 
         if(tipo == 'JI' && relacion == 'JCJ'){     
           consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' and (s.departamento = 'ALMACEN' or s.departamento = 'CONTROL DE PRODUCCION')  order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'JBG'){
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.clave = 300050 order by id desc;"
+
         }
      
         // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
@@ -2504,7 +2519,7 @@ const  usersRoute = require ( './routes/api/users' );
  app.use ( '/users' , usersRoute);
 
 // Ejemplo que especifica el puerto e inicia el servidor 
-const port = process.env.PORT || 3000 ; // Puede usar variables de entorno para la configuración del puerto
+const port = process.env.PORT || 3001 ; // Puede usar variables de entorno para la configuración del puerto
 app.listen (port, () => { 
     console.log ( `El servidor se está ejecutando en el puerto ${port} ` ); 
 });
