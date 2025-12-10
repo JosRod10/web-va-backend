@@ -389,75 +389,168 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
     },
 
   });
-
+  // ENVIAR A J.SISTEMAS, ALMACEN Y P GERARDO *******************************************************************
+  // Todos los usuarios con GLR menos GERARDO
   if(jefe == 'GLR' && clave != '300050'){
     correo = 'glechuga@cinasa.com.mx';
+    // correo = 'jarodriguez@cinasa.com.mx';
   }
-  if(jefe == 'GLR' && clave == '300050'){
-    correo = 'jbustos@cinasa.com.mx';
+  // ENVIAR A J.SISTEMAS, ALMACEN Y P GERARDO *******************************************************************
+  // Todos los usuarios con AOP en este caso solo es BETO
+  if(jefe == 'AOP' && clave == '300034'){
+    correo = 'glechuga@cinasa.com.mx';
+    // correo = 'jarodriguez@cinasa.com.mx';
   }
-  if(jefe == 'KAR'){
-    correo = 'kalcantara@cinasa.com.mx';
+  // ENVIAR A DR.FINANZAS ALICIA *******************************************************************
+  // Solo es GERARDO y TERESA
+  if((jefe == 'GLR' && clave == '300050') || (jefe == 'TJRH' && clave == '300300')){
+    correo = 'atorres@cinasa.com.mx';
+    // correo = 'jarodriguez@cinasa.com.mx';
   }
-  if(jefe == 'JCJ'){
-    correo = 'jcano@cinasa.com.mx';
-  }
-  if(jefe == 'FRV'){
+  // ************************************************************************************************
+  // if(jefe == 'KAR'){
+  //   correo = 'kalcantara@cinasa.com.mx';
+  // }
+  // if(jefe == 'JCJ'){
+  //   correo = 'jcano@cinasa.com.mx';
+  // }
+  // ENVIAR A GERENTE DE MANTENIMIENTO FRANCISCO RODRIGUEZ *******************************************************************
+  // Todos los usuarios con FRV menos FRANCISCO RODRIGUEZ
+  if(jefe == 'FRV' && clave != '200030'){
     correo = 'frodriguez@cinasa.com.mx';
   }
-  if(jefe == 'ORLS'){
+  // ENVIAR A JEFE DE PROD. ABRAS. E ING.IND LOPEZ SAMANO OMAR ROSALIO *******************************************************************
+  // Todos los usuarios con ORLS menos LOPEZ SAMANO OMAR ROSALIO
+  if(jefe == 'ORLS' && clave != '200125'){
     correo = 'orosalio@cinasa.com.mx';
   }
-  if(jefe == 'BHTC'){
-    correo = 'logistica@cinasa.com.mx';
-  }
-  if(jefe == 'MVHA'){
-    correo = 'mvianey@cinasa.com.mx';
-  }
-  if(jefe == 'JJBP'){
+  // if(jefe == 'BHTC'){
+  //   correo = 'logistica@cinasa.com.mx';
+  // }
+  // ENVIAR A GTE.TEC.REFRACTARIOS Y COSTOS BERNAL PALACIOS JOSE JUAN *******************************************************************
+  // Todos los usuarios con JJBP menos BERNAL PALACIOS JOSE JUAN
+  if(jefe == 'JJBP' && clave != '300008'){
     correo = 'jbernal@cinasa.com.mx';
   }
-  if(jefe == 'JBG'){
+  // ENVIAR A JAVIER BUSTOS *******************************************************************
+  // Todos los usuarios con JBG menos JAVIER BUSTOS
+  if(jefe == 'JBG' && clave != '300020'){
     correo = 'jbustos@cinasa.com.mx';
   }
+  // Todas las solicitudes de GUTIERREZ SALGUERO GUMARO HUMBERTO
+  if(jefe == 'GHGS' && clave == '300025'){
+    // correo = 'hgutierrez@cinasa.com.mx';
+    correo = 'jbustos@cinasa.com.mx';
+  }
+  // Todas las solicitudes de ELVIA RIOS
+  if(jefe == 'EMRP'){
+    // correo = 'cvaldes@cinasa.com.mx';
+    correo = 'jbustos@cinasa.com.mx';
+  }
+  // Todas las solicitudes de LOPEZ GUADARRAMA FERNANDO
+  if(jefe == 'FLG' && clave == '300039'){
+    // correo = 'flopez@cinasa.com.mx';
+    correo = 'jbustos@cinasa.com.mx';
+  }
+  // Todas las solicitudes de GUTIERREZ HERRERA JOSUE
+  if(jefe == 'JGH'){
+    // correo = 'jgutierrez@cinasa.com.mx';
+    correo = 'jbustos@cinasa.com.mx';
+  }
+  // ENVIAR A JEF TEC  ABRA Y SIS  GEST  CAL SILVIA MANZO *******************************************************************
+  // Todos los usuarios de CONTROL DE CALIDAD Y TECNICOS con SCMG menos SILVIA
   if(jefe == 'SCMG' && clave != '300024'){
     correo = 'smanzo@cinasa.com.mx';
   }
+  // ENVIAR A CONTRALORIA GUTIERREZ SALGUERO GUMARO HUMBERTO *******************************************************************
+  // Todos los usuarios de CONTABILIDAD con GHGS menos GUTIERREZ SALGUERO GUMARO HUMBERTO
+  if(jefe == 'GHGS' && clave != '300025'){
+    correo = 'hgutierrez@cinasa.com.mx';
+  }
+  // Todas las solicitudes de GONZALEZ ESCUTIA ABRAHAM
+  if(jefe == 'AGE'){
+    correo = 'hgutierrez@cinasa.com.mx';
+  }
+  // ENVIAR A AUXILIAR DE COMPRAS ELVIA RIOS *******************************************************************
+  // Todos los usuarios de COMPRAS con CNVS menos VALDES SANCHEZ CESAR NORBERTO
+  if(jefe == 'CNVS' && clave != '300031'){
+    correo = 'erios@cinasa.com.mx';
+  }
+  // ENVIAR A JEFE. DE COMPRAS VALDES SANCHEZ CESAR NORBERTO *******************************************************************
+  // Todos los usuarios con EMRP por el momento solo es ELVIA RIOS
+  // if(jefe == 'EMRP'){
+  //   correo = 'cvaldes@cinasa.com.mx';
+  // }
+  // if(jefe == 'AOP'){
+  //   correo = 'aordonez@cinasa.com.mx';
+  // }
+  // if(jefe == 'EMRP'){
+  //   correo = 'erios@cinasa.com.mx';
+  // }
+  // ENVIAR A GERENCIA DE VENTAS REFRACTARIO LOPEZ GUADARRAMA FERNANDO *******************************************************************
+  // Todos los usuarios con FLG menos LOPEZ GUADARRAMA FERNANDO
+  if(jefe == 'FLG' && clave != '300039'){
+    correo = 'flopez@cinasa.com.mx';
+  }
+  // ENVIAR A JEFE DE VENTAS ZONA CENTRO GUTIERREZ HERRERA JOSUE *******************************************************************
+  // Todos los usuarios con MMM
+  if(jefe == 'MMM'){
+    correo = 'jgutierrez@cinasa.com.mx';
+  }
+  // ENVIAR A JEF TEC  ABRA Y SIS  GEST  CAL SILVIA MANZO *******************************************************************
+  // Todos los usuarios con YMGS por ahora solo es Yessin
+  if(jefe == 'YMGS'){
+    // correo = 'ygonzalez@cinasa.com.mx';
+    correo = 'smanzo@cinasa.com.mx';
+  }
+  // ENVIAR A JEF TEC  ABRA Y SIS  GEST  CAL SILVIA MANZO *******************************************************************
+  // Todos los usuarios con FJTR por ahora solo es Francisco Terron
+  if(jefe == 'FJTR'){
+    // correo = 'tecnicoabrasivos@cinasa.com.mx';
+    correo = 'smanzo@cinasa.com.mx';
+  }
+  // ENVIAR A JEFE DE RELACIONES INDUST TERESA RODRIGUEZ *******************************************************************
+  // Todos los usuarios con TJRH menos TERESA
+  if(jefe == 'TJRH' && clave != '300300'){
+    correo = 'trodriguez@cinasa.com.mx';
+  }
+
+  //************* */ ENVIAR A ING. ANTONIO ADAME *******************************************************************
+  // Solicitudes de SILVIA MANZO
   if(jefe == 'SCMG' && clave == '300024'){
     correo = 'jadame@cinasa.com.mx';
   }
-  if(jefe == 'GHGS'){
-    correo = 'hgutierrez@cinasa.com.mx';
+  // Solicitudes de FRANCISCO RODRIGUEZ VILLANUEVA
+  if(jefe == 'FRV' && clave == '200030'){
+    correo = 'jadame@cinasa.com.mx';
   }
-  if(jefe == 'CNVS'){
-    correo = 'cvaldes@cinasa.com.mx';
+  // Solicitudes de LOPEZ SAMANO OMAR ROSALIO
+  if(jefe == 'ORLS' && clave == '200125'){
+    correo = 'jadame@cinasa.com.mx';
   }
-  if(jefe == 'AGE'){
-    correo = 'agonzalez@cinasa.com.mx';
+  // Solicitudes de HERNANDEZ ARIZMENDI MARIO VIANEY
+  if(jefe == 'MVHA'){
+    // correo = 'mvianey@cinasa.com.mx';
+    correo = 'jadame@cinasa.com.mx';
   }
-  if(jefe == 'AOP'){
-    correo = 'aordonez@cinasa.com.mx';
+  // Solicitudes de BERNAL PALACIOS JOSE JUAN
+  if(jefe == 'JJBP' && clave == '300008'){
+    // correo = 'jbernal@cinasa.com.mx';
+    correo = 'jadame@cinasa.com.mx';
   }
-  if(jefe == 'EMRP'){
-    correo = 'erios@cinasa.com.mx';
-  }
-  if(jefe == 'FLG'){
-    correo = 'flopez@cinasa.com.mx';
-  }
-  if(jefe == 'JGH'){
-    correo = 'jgutierrez@cinasa.com.mx';
-  }
+  // Solicitudes de VILLANUEVA ESPINOSA JOSE FRANCISCO
   if(jefe == 'JFVE'){
-    correo = 'fvillanueva@cinasa.com.mx';
+    // correo = 'fvillanueva@cinasa.com.mx';
+    correo = 'jadame@cinasa.com.mx';
   }
-  if(jefe == 'YMGS'){
-    correo = 'ygonzalez@cinasa.com.mx';
+
+  //************* */ ENVIAR A ING. MONICA JUNO GARCIA SANCHEZ *******************************************************************
+  // Solicitudes de JAVIER BUSTOS
+  if(jefe == 'JBG' && clave == '300020'){
+    correo = 'mgarcia@cinasa.com.mx';
   }
-  if(jefe == 'FJTR'){
-    correo = 'tecnicoabrasivos@cinasa.com.mx';
-  }
-  if(jefe == 'TJRH'){
-    correo = 'trodriguez@cinasa.com.mx';
+  if(jefe == 'CNVS' && clave == '300031'){
+    correo = 'mgarcia@cinasa.com.mx';
   }
 
 
@@ -1303,35 +1396,43 @@ async function consultarSolicitudes(tipo, relacion) {
         var updateStatus = '';
 
         if(tipo == 'JI' && relacion == 'ORLS'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'ORLS' order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'ORLS' and clave != 200125 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'FRV'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'FRV' order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'FRV' and s.clave != 200030 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'JJBP'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'JJBP' order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'JJBP' and s.clave != 300008 order by id desc";
         }
 
-        if(tipo == 'JI' && relacion == 'CNVS' || tipo == 'JI' && relacion == 'EMRP'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'CNVS' order by id desc";
+        if(tipo == 'JI' && relacion == 'CNVS'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'CNVS' or s.reldep = 'EMRP') and s.clave != 300031  order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'EMRP'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'CNVS' and s.clave != 300031 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'SCMG'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'SCMG' and s.clave != 300024 order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'SCMG' or s.reldep = 'KAR' or s.reldep = 'YMGS' or s.reldep = 'FJTR') and s.clave != 300024 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'KAR' || tipo == 'JI' && relacion == 'MVHA' || tipo == 'JI' && relacion == 'JFVE' || tipo == 'JI' && relacion == 'YMGS' || tipo == 'JI' && relacion == 'FJTR'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'SCMG' and s.departamento = 'TECNICO' order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'SCMG' and s.clave != 300024 and s.departamento = 'TECNICO' order by id desc";
         }
 
-        if(tipo == 'JI' && relacion == 'GHGS' || tipo == 'JI' && relacion == 'AGE'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GHGS' order by id desc";
+        if(tipo == 'JI' && relacion == 'GHGS'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'GHGS' or s.reldep = 'AGE' or s.reldep = 'JBG') and (s.clave != 300025 and s.clave != 300020) order by id desc";
         }
 
-        if(tipo == 'JI' && relacion == 'JBG' || tipo == 'JI' && relacion == 'GHGS'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'JBG' order by id desc";
+        if(tipo == 'JI' && relacion == 'AGE'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GHGS' and s.clave != 300025 order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'JBG'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and ( (s.reldep = 'JBG' and s.clave != 300020) or (s.reldep = 'GHGS' and s.clave = 300025 ) or (s.reldep = 'EMRP' and s.clave = 300036 ) or (s.reldep = 'FLG' and s.clave = 300039 ) or (s.reldep = 'JGH' and s.clave = 300055 ) ) order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'FLG'){     
@@ -1353,11 +1454,11 @@ async function consultarSolicitudes(tipo, relacion) {
         }
 
         if(tipo == 'JI' && relacion == 'GLR'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'GLR' or s.reldep = 'AOP') and s.clave != 300050 order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'GLR' or s.reldep = 'AOP' or s.reldep = 'JCJ' or s.reldep = 'BHTC') and s.clave != 300050 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'AOP'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' and (s.clave != 300050 and s.clave != 300034)  order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' and (s.clave != 300050 and s.clave != 300034) and s.departamento = 'SISTEMAS DE INFORMACION' order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'BHTC'){     
@@ -1368,8 +1469,13 @@ async function consultarSolicitudes(tipo, relacion) {
           consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' and (s.departamento = 'ALMACEN' or s.departamento = 'CONTROL DE PRODUCCION')  order by id desc";
         }
 
-        if(tipo == 'JI' && relacion == 'JBG'){
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.clave = 300050 order by id desc;"
+        if(tipo == 'JI' && relacion == 'AGTD'){
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.clave = 300050 or s.clave = 300034 or s.clave = 300175 or s.clave = 300300) order by id desc;"
+
+        }
+
+        if(tipo == 'JI' && relacion == 'MJGS'){
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'JBG' or s.reldep = 'CNVS') and (s.clave = 300020 or s.clave = 300031) order by id desc";
 
         }
      
