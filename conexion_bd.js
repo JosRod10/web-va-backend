@@ -14,33 +14,33 @@ const sql = require('mssql');
 // };
 
 //CONEXIÓN INSTANCIA TOLLT0100\\MSSQLSERVER01
-const config = {
-    server: 'TOLLT0100\\MSSQLSERVER01', 
-    database: 'BdApps',
-    user: 'admin',
-    password: 'admin',
-    options: {
-        port: 2100,
-        trustServerCertificate: true
-    },
-};
+// const config = {
+//     server: 'TOLLT0100\\MSSQLSERVER01', 
+//     database: 'BdApps',
+//     user: 'admin',
+//     password: 'admin',
+//     options: {
+//         port: 2100,
+//         trustServerCertificate: true
+//     },
+// };
 
 //CONEXIÓN INSTANCIA TOLLT0100\\MSSQLSERVER01
-// const config = {
-//     server: '199.5.83.245\\SRV01DAHQ', 
-//     database: 'BdApps',
-//     user: 'sa',
-//     password: 'Cinas@2017',
-//     options: {
-//         port: 1433,
-//         trustServerCertificate: true,
-//         // cryptoCredentialsDetails: {
-//         //     minVersion: 'TLSv1' // Permite versiones de TLS más antiguas, como TLS 1.0
-//         // },
-//         encrypt: false, // Disable SSL/TLS
-//     },
+const config = {
+    server: '199.5.83.245\\SRV01DAHQ', 
+    database: 'BdApps',
+    user: 'sa',
+    password: 'Cinas@2017',
+    options: {
+        port: 1433,
+        trustServerCertificate: true,
+        // cryptoCredentialsDetails: {
+        //     minVersion: 'TLSv1' // Permite versiones de TLS más antiguas, como TLS 1.0
+        // },
+        encrypt: false, // Disable SSL/TLS
+    },
 
-// };
+};
 
 //CONEXIÓN INSTANCIA TOLLT0100\\MSSQLSERVER03
 // const config = {

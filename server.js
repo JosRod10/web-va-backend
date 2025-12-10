@@ -43,8 +43,8 @@ async function ausentarColaboradores() {
         console.log('Conexión a SQL Server exitosa');
         const request = new sql.Request();
      
-        const resultStatusAusente = await request.query("UPDATE [Vac.solicitud] SET status = 'Ausente' WHERE CAST(GETDATE() AS DATE) BETWEEN fecha_apartir AND fecha_hasta;");
-        const reusltStatusCompletado =  await request.query("UPDATE [Vac.solicitud] SET status = 'Completado' WHERE GETDATE() > DATEADD(day, 1, fecha_hasta) AND status = 'Ausente';");
+        const resultStatusAusente = await request.query("UPDATE [Vac.solicitud] SET status = 'Ausente' WHERE firma_jefe_in != '' and CAST(GETDATE() AS DATE) BETWEEN fecha_apartir AND fecha_hasta;");
+        const reusltStatusCompletado =  await request.query("UPDATE [Vac.solicitud] SET status = 'Completado' WHERE GETDATE() > DATEADD(day, 1, fecha_hasta) AND status = 'Ausente' AND firma_jefe_in != '';");
         
         if(resultStatusAusente){
           console.log('Registros modificados con exito');
