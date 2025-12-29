@@ -44,7 +44,7 @@ async function ausentarColaboradores() {
         const request = new sql.Request();
      
         const resultStatusAusente = await request.query("UPDATE [Vac.solicitud] SET status = 'Ausente' WHERE firma_jefe_in != '' and CAST(GETDATE() AS DATE) BETWEEN fecha_apartir AND fecha_hasta;");
-        const reusltStatusCompletado =  await request.query("UPDATE [Vac.solicitud] SET status = 'Completado' WHERE GETDATE() > DATEADD(day, 1, fecha_hasta) AND status = 'Ausente' AND firma_jefe_in != '';");
+        const reusltStatusCompletado =  await request.query("UPDATE [Vac.solicitud] SET status = 'Aceptado' WHERE GETDATE() > DATEADD(day, 1, fecha_hasta) AND status = 'Ausente' AND firma_jefe_in != '';");
         
         if(resultStatusAusente){
           console.log('Registros modificados con exito');
@@ -177,6 +177,102 @@ async function consultaVacacionesVencer() {
         console.error('Error al conectar o consultar:', err);
       }
 }
+// ****************************************************************************************************************************
+
+// async function descontarDias() {
+//   console.log('¡Hoy 11:50 Consultando días a descontar!');
+//       try {
+//         await sql.connect(config);
+//         console.log('Conexión a SQL Server exitosa');
+//         const request = new sql.Request();
+     
+//           const result = await request.query("Select * from [Vac.solicitud] where status = 'Ausente' or status = 'Aceptado' and firma_jefe_in != ''");
+//         if(result){
+//           console.log(result.recordset);
+//           for(let solicitud of result.recordset){
+
+//             clave = solicitud.clave;
+//             dias_descontar = parseInt(solicitud.cuantos_dias);
+//             periodo = solicitud.periodo;
+
+//             request.input('clave', sql.NVarChar, clave);
+//             request.input('dias_descontar', sql.Int, dias_descontar);
+//             request.input('periodo', sql.NVarChar, periodo);
+
+//             const resultado = await request.query("UPDATE [Vac.control_vacaciones] SET Saldo = CAST(CAST(Saldo AS NUMERIC(10, 0)) - @dias_descontar AS NVARCHAR(MAX)), Vacaciones_tomadas = CAST(CAST(Vacaciones_tomadas AS NUMERIC(10, 0)) + @dias_descontar AS NVARCHAR(MAX)) WHERE Clave = @clave and Periodo = @periodo");
+
+//             console.log('Se descontaron los días al colaborador.');
+//           }
+//         if(!result)
+//           console.log('No hay colaborador con días a descontar.');
+//         }
+//         // Cerrar la conexión
+//         await sql.close();
+//         console.log('Conexión cerrada');
+//         // console.log(data);
+//         // return result;
+//       } catch (err) {
+//         console.error('Error al conectar o consultar:', err);
+//       }
+// }
+
+async function descontarDias() {
+    console.log('¡Hoy 12:08 Consultando días a descontar!');
+    let pool;
+
+    try {
+        pool = await sql.connect(config);
+        console.log('Conexión a SQL Server exitosa');
+
+        // 1. Usar paréntesis para agrupar la lógica del WHERE
+        const querySolicitudes = `
+            SELECT clave, cuantos_dias, periodo 
+            FROM [Vac.solicitud] 
+            WHERE (status = 'Ausente' OR status = 'Aceptado') 
+            AND firma_jefe_in != ''
+        `;
+        
+        const result = await pool.request().query(querySolicitudes);
+
+        if (result.recordset.length > 0) {
+            console.log(`Procesando ${result.recordset.length} solicitudes...`);
+
+            for (let solicitud of result.recordset) {
+                // 2. Crear una nueva solicitud (request) por cada iteración para evitar error de parámetros duplicados
+                const updateRequest = pool.request();
+                
+                updateRequest.input('clave', sql.NVarChar, solicitud.clave);
+                updateRequest.input('dias_descontar', sql.Int, parseInt(solicitud.cuantos_dias));
+                updateRequest.input('periodo', sql.NVarChar, solicitud.periodo);
+
+                // 3. Query de actualización (asegúrate de que los nombres de columnas coincidan)
+                const updateQuery = `
+                    UPDATE [Vac.control_vacaciones] 
+                    SET Saldo = CAST(CAST(Saldo AS NUMERIC(10, 0)) - @dias_descontar AS NVARCHAR(MAX)), 
+                        Vacaciones_tomadas = CAST(CAST(Vacaciones_tomadas AS NUMERIC(10, 0)) + @dias_descontar AS NVARCHAR(MAX)) 
+                    WHERE Clave = @clave AND Periodo = @periodo
+                `;
+
+                await updateRequest.query(updateQuery);
+                console.log(`Días descontados a clave: ${solicitud.clave}`);
+            }
+        } else {
+            console.log('No hay colaboradores con días a descontar.');
+        }
+
+    } catch (err) {
+        console.error('Error al procesar el descuento de días:', err);
+    } finally {
+        // 4. Cerrar la conexión siempre, incluso si hay error
+        if (pool) {
+            await pool.close();
+            console.log('Conexión cerrada');
+        }
+    }
+}
+
+
+// ****************************************************************************************************************************
 
 // Programa la ejecución de la función
 // "0 9 * * *" significa:
@@ -200,6 +296,11 @@ cron.schedule('0 7 * * *', generarPeriodo, {
   scheduled: true,
   timezone: "America/Mexico_City" // O la zona horaria de tu preferencia
 });
+
+// cron.schedule('10 13 * * *', descontarDias, {
+//   scheduled: true,
+//   timezone: "America/Mexico_City" // O la zona horaria de tu preferencia
+// });
 
 // console.log('El programador de tareas ha sido iniciado.');
 
@@ -401,11 +502,34 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
     correo = 'glechuga@cinasa.com.mx';
     // correo = 'jarodriguez@cinasa.com.mx';
   }
+  if(jefe == 'JCJ' && clave == '300175'){
+    correo = 'glechuga@cinasa.com.mx';
+    // correo = 'jarodriguez@cinasa.com.mx';
+  }
+    if(jefe == 'BHTC' && clave == '200267'){
+    correo = 'glechuga@cinasa.com.mx';
+    // correo = 'jarodriguez@cinasa.com.mx';
+  }
   // ENVIAR A DR.FINANZAS ALICIA *******************************************************************
   // Solo es GERARDO y TERESA
   if((jefe == 'GLR' && clave == '300050') || (jefe == 'TJRH' && clave == '300300')){
     correo = 'atorres@cinasa.com.mx';
     // correo = 'jarodriguez@cinasa.com.mx';
+  }
+  // Todas las solicitudes de ELVIA RIOS
+  if(jefe == 'EMRP'){
+    // correo = 'cvaldes@cinasa.com.mx';
+    correo = 'atorres@cinasa.com.mx';
+  }
+  // Todas las solicitudes de NORBERTO MORALES
+  if(jefe == 'NJMS'){
+    // correo = 'cvaldes@cinasa.com.mx';
+    correo = 'atorres@cinasa.com.mx';
+  }
+  // Todas las solicitudes de NORBERTO MORALES
+  if(jefe == 'AGTD' && clave == '300047'){
+    // correo = 'cvaldes@cinasa.com.mx';
+    correo = 'atorres@cinasa.com.mx';
   }
   // ************************************************************************************************
   // if(jefe == 'KAR'){
@@ -442,11 +566,6 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
     // correo = 'hgutierrez@cinasa.com.mx';
     correo = 'jbustos@cinasa.com.mx';
   }
-  // Todas las solicitudes de ELVIA RIOS
-  if(jefe == 'EMRP'){
-    // correo = 'cvaldes@cinasa.com.mx';
-    correo = 'jbustos@cinasa.com.mx';
-  }
   // Todas las solicitudes de LOPEZ GUADARRAMA FERNANDO
   if(jefe == 'FLG' && clave == '300039'){
     // correo = 'flopez@cinasa.com.mx';
@@ -462,10 +581,15 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
   if(jefe == 'SCMG' && clave != '300024'){
     correo = 'smanzo@cinasa.com.mx';
   }
+  if(jefe == 'KAR' && clave == '200267'){
+    correo = 'smanzo@cinasa.com.mx';
+    // correo = 'jarodriguez@cinasa.com.mx';
+  }
   // ENVIAR A CONTRALORIA GUTIERREZ SALGUERO GUMARO HUMBERTO *******************************************************************
   // Todos los usuarios de CONTABILIDAD con GHGS menos GUTIERREZ SALGUERO GUMARO HUMBERTO
-  if(jefe == 'GHGS' && clave != '300025'){
-    correo = 'hgutierrez@cinasa.com.mx';
+  if(jefe == 'GHGS' && clave != '300025' && clave != '300069'){
+    // correo = 'hgutierrez@cinasa.com.mx';
+    correo = 'agonzalez@cinasa.com.mx';
   }
   // Todas las solicitudes de GONZALEZ ESCUTIA ABRAHAM
   if(jefe == 'AGE'){
@@ -494,7 +618,10 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
   }
   // ENVIAR A JEFE DE VENTAS ZONA CENTRO GUTIERREZ HERRERA JOSUE *******************************************************************
   // Todos los usuarios con MMM
-  if(jefe == 'MMM'){
+  if(jefe == 'MMM' && (clave != 300226 && clave != 300258 && clave != 300172 && clave != 300207 && clave != 300186 && clave != 300118 && clave != 300296)){
+    correo = 'jgutierrez@cinasa.com.mx';
+  }
+  if(jefe == 'MMM' && (clave == 300226 || clave == 300258 || clave == 300172 || clave == 300207 || clave == 300186 || clave == 300118 || clave == 300296)){
     correo = 'jgutierrez@cinasa.com.mx';
   }
   // ENVIAR A JEF TEC  ABRA Y SIS  GEST  CAL SILVIA MANZO *******************************************************************
@@ -512,7 +639,8 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
   // ENVIAR A JEFE DE RELACIONES INDUST TERESA RODRIGUEZ *******************************************************************
   // Todos los usuarios con TJRH menos TERESA
   if(jefe == 'TJRH' && clave != '300300'){
-    correo = 'trodriguez@cinasa.com.mx';
+    // correo = 'trodriguez@cinasa.com.mx';
+    correo = 'mchavez@cinasa.com.mx'
   }
 
   //************* */ ENVIAR A ING. ANTONIO ADAME *******************************************************************
@@ -541,7 +669,7 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
   // Solicitudes de VILLANUEVA ESPINOSA JOSE FRANCISCO
   if(jefe == 'JFVE'){
     // correo = 'fvillanueva@cinasa.com.mx';
-    correo = 'jadame@cinasa.com.mx';
+    correo = 'mvianey@cinasa.com.mx';
   }
 
   //************* */ ENVIAR A ING. MONICA JUNO GARCIA SANCHEZ *******************************************************************
@@ -551,6 +679,17 @@ async function enviarCorreoInsertado(nombre, dias, de, a, permiso1, permiso2, pe
   }
   if(jefe == 'CNVS' && clave == '300031'){
     correo = 'mgarcia@cinasa.com.mx';
+  }
+  if(jefe == 'BEAG'){
+    correo = 'mgarcia@cinasa.com.mx';
+  }
+
+  if(jefe == 'AGTD' && clave == '300301'){
+    correo = 'mgarcia@cinasa.com.mx';
+  }
+  // **********************************************************************************************************************************
+  if(jefe == 'GHGS' && clave == '300069'){
+    correo = 'nmorales@cinasa.com.mx';
   }
 
 
@@ -957,7 +1096,7 @@ async function insertarSolicitud(paramUno, paramDos, paramTres, paramCuatro, par
         // // Cambia sql.DateTime2 de vuelta a sql.NVarChar
         // request.input('date', sql.NVarChar, fechaSQLStandard); 
 
-        const result = await request.query("INSERT INTO [Vac.solicitud] (clave, nombre, departamento, fecha_solicitud, tipo_solicitud, cuantos_dias, fecha_apartir, fecha_hasta, con_sueldo, sin_sueldo, sindicalizado, no_sindicalizado, motivo, firma_interesado, firma_jefe_in, firma_gerente, status, periodo, genera, reldep) VALUES (@clave, @nombre, @dep, @fecha, @tipo_sol, @dias, @fechaA, @fechaH, @permiso1, @permiso2, @permiso3, @permiso4, @motivo, @date, '', '', 'Interesado', @periodo, @genera, @relacion)");
+        const result = await request.query("INSERT INTO [Vac.solicitud] (clave, nombre, departamento, fecha_solicitud, tipo_solicitud, cuantos_dias, fecha_apartir, fecha_hasta, con_sueldo, sin_sueldo, sindicalizado, no_sindicalizado, motivo, firma_interesado, firma_jefe_in, firma_gerente, status, periodo, genera, reldep) VALUES (@clave, @nombre, @dep, @fecha, @tipo_sol, @dias, @fechaA, @fechaH, @permiso1, @permiso2, @permiso3, @permiso4, @motivo, @date, '', '', 'Pend. X Jefe Inm.', @periodo, @genera, @relacion)");
         const resultUpdate = await request.query("UPDATE cin_emp SET emp_estsol = 'Pendiente' WHERE emp_cve = @clave");
         
         var permiso1 = '', permiso2 = '', permiso3 = '', permiso4 = '';
@@ -1066,7 +1205,7 @@ async function updateJefeInmediato(paramUno, paramDos, paramTres, paramCuatro, p
         // console.log('La función se ejecutó el:' + formatoEnEspanol);
         request.input('date', sql.NVarChar, formatoEnEspanol);
 
-        const query = "UPDATE [Vac.solicitud] SET firma_jefe_in = @date, status = 'Jefe Inmediato' WHERE id = @id"
+        const query = "UPDATE [Vac.solicitud] SET firma_jefe_in = @date, status = 'Pend. X R.H.' WHERE id = @id"
         
         const result = await request.query(query);
         
@@ -1241,7 +1380,7 @@ async function aceptarRI(paramUno) {
 
         request.input('id', sql.Int, paramUno);
 
-        const result = await request.query("UPDATE [Vac.solicitud] SET status = 'Aceptado' WHERE id = @id");
+        const result = await request.query("UPDATE [Vac.solicitud] SET status = 'Revizada' WHERE id = @id");
      
         if(result){
           console.log("Modificado con exito");
@@ -1314,7 +1453,7 @@ async function aprobarSolicitud(paramUno, paramDos, paramTres, paramCuatro, para
           // console.log('Correo para enviar: ', email_genera);
         }
         if(paramDos == 1){
-          queryUpdateUno = "UPDATE [Vac.solicitud] SET status = 'Completado' WHERE id = @id"
+          queryUpdateUno = "UPDATE [Vac.solicitud] SET status = 'Aceptado' WHERE id = @id"
           queryUpdateDos = "UPDATE [Vac.control_vacaciones] SET Saldo = @dias_d, Vacaciones_tomadas = @dias_u WHERE Clave = @clave and Periodo = @periodo"
           queryUpdateTres = "UPDATE cin_emp SET emp_estsol = 'Disponible' WHERE emp_cve = @clave"
             
@@ -1396,86 +1535,117 @@ async function consultarSolicitudes(tipo, relacion) {
         var updateStatus = '';
 
         if(tipo == 'JI' && relacion == 'ORLS'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'ORLS' and clave != 200125 order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'ORLS' and s.clave != 200125 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'FRV'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'FRV' and s.clave != 200030 order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'FRV' and s.clave != 200030 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'JJBP'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'JJBP' and s.clave != 300008 order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'JJBP' and s.clave != 300008 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'CNVS'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'CNVS' or s.reldep = 'EMRP') and s.clave != 300031  order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'CNVS' and s.clave != 300031  order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'EMRP'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'CNVS' and s.clave != 300031 order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'CNVS' and s.clave != 300031 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'SCMG'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'SCMG' or s.reldep = 'KAR' or s.reldep = 'YMGS' or s.reldep = 'FJTR') and s.clave != 300024 order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and (s.reldep = 'SCMG' or s.reldep = 'KAR' or s.reldep = 'YMGS' or s.reldep = 'FJTR') and (s.clave != 300024 and s.clave != 300150) order by id desc";
         }
 
-        if(tipo == 'JI' && relacion == 'KAR' || tipo == 'JI' && relacion == 'MVHA' || tipo == 'JI' && relacion == 'JFVE' || tipo == 'JI' && relacion == 'YMGS' || tipo == 'JI' && relacion == 'FJTR'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'SCMG' and s.clave != 300024 and s.departamento = 'TECNICO' order by id desc";
+        if(tipo == 'JI' && relacion == 'KAR' || tipo == 'JI' && relacion == 'YMGS' || tipo == 'JI' && relacion == 'FJTR'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'SCMG' and s.clave != 300024 and s.departamento = 'TECNICO' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'MVHA'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'JFVE' and s.departamento = 'TECNICO' order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'JFVE'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and (s.reldep = 'SCMG' or s.reldep = 'JFVE') and (s.clave = 300294 or s.clave = 300295) and s.departamento = 'TECNICO' order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'GHGS'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'GHGS' or s.reldep = 'AGE' or s.reldep = 'JBG') and (s.clave != 300025 and s.clave != 300020) order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and (s.reldep = 'GHGS' or s.reldep = 'AGE' or s.reldep = 'JBG' or s.reldep = 'NJMS') and (s.clave != 300025 and s.clave != 300020) order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'NJMS'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'GHGS' and s.clave = 300069 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'AGE'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GHGS' and s.clave != 300025 order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'GHGS' and (s.clave != 300025 and s.clave != 300069) order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'JBG'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and ( (s.reldep = 'JBG' and s.clave != 300020) or (s.reldep = 'GHGS' and s.clave = 300025 ) or (s.reldep = 'EMRP' and s.clave = 300036 ) or (s.reldep = 'FLG' and s.clave = 300039 ) or (s.reldep = 'JGH' and s.clave = 300055 ) ) order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and ( (s.reldep = 'JBG' and s.clave != 300020) or (s.reldep = 'FLG' and s.clave = 300039 ) or (s.reldep = 'JGH' and s.clave = 300055 ) ) order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'FLG'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'FLG' order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'FLG' order by id desc";
         }
         // if(tipo == 'G'){
         //   consulta = "select u.*, s.* from cin_emp as u, [Vac.solicitud] as s where u.emp_cve = s.clave and (s.departamento = 'SISTEMAS DE INFORMACION' or s.departamento = 'ALMACEN') and s.status = 'Jefe Inmediato' order by id desc";
         // }
         if(tipo == 'RI'){
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status != 'Completado' and s.status != 'Rechazado' and s.status != 'Inhabil' order by id desc;";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status != 'Aceptado' and s.status != 'Rechazado' and s.status != 'Inhabil' order by id desc;";
         }
 
         if(tipo == 'JI' && relacion == 'TJRH'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'TJRH' order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'TJRH' and s.clave != 300300 order by id desc";
+        }
+
+        if(tipo == 'JI' && relacion == 'MCV'){     
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'TJRH' and s.clave != 300233 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'JGH'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'MMM' order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'MMM' order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'GLR'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'GLR' or s.reldep = 'AOP' or s.reldep = 'JCJ' or s.reldep = 'BHTC') and s.clave != 300050 order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and (s.reldep = 'GLR' or s.reldep = 'AOP' or s.reldep = 'JCJ' or s.reldep = 'BHTC') and s.clave != 300050 order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'AOP'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' and (s.clave != 300050 and s.clave != 300034) and s.departamento = 'SISTEMAS DE INFORMACION' order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'GLR' and (s.clave != 300050 and s.clave != 300034) and s.departamento = 'SISTEMAS DE INFORMACION' order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'BHTC'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' and s.departamento = 'EMBARQUES Y EMPAQUES' order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'GLR' and (s.departamento = 'EMBARQUES Y EMPAQUES' or s.clave = 300274) order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'JCJ'){     
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and s.reldep = 'GLR' and (s.departamento = 'ALMACEN' or s.departamento = 'CONTROL DE PRODUCCION')  order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.reldep = 'GLR' and (s.departamento = 'ALMACEN' or s.departamento = 'CONTROL DE PRODUCCION') and s.clave != 300274  order by id desc";
         }
 
         if(tipo == 'JI' && relacion == 'AGTD'){
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.clave = 300050 or s.clave = 300034 or s.clave = 300175 or s.clave = 300300) order by id desc;"
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and (s.clave = 300050 or s.clave = 300034 or s.clave = 300175 or s.clave = 300300 or s.clave = 300233 or s.clave = 300036 or s.clave = 300001 or s.clave = 300047 or s.clave = 300025) order by id desc;"
 
         }
 
         if(tipo == 'JI' && relacion == 'MJGS'){
-          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Interesado' and (s.reldep = 'JBG' or s.reldep = 'CNVS') and (s.clave = 300020 or s.clave = 300031) order by id desc";
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and (s.reldep = 'JBG' or s.reldep = 'CNVS' or s.reldep = 'MJGS' or s.reldep = 'AGTD' or s.reldep = 'BEAG') and (s.clave = 300020 or s.clave = 300031 or s.clave = 300026 or s.clave = 300301 or s.clave = 300026) order by id desc";
+
+        }
+
+        if(tipo == 'JI' && relacion == 'JAAC'){
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and (s.clave = 300152 or s.clave = 300024 or s.clave = 200030 or s.clave = 200125 or s.clave = 300008 or s.reldep = 'MVHA') order by id desc";
+
+        }
+
+        if(tipo == 'JI' && relacion == 'BEAG'){
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and s.clave = 300299 order by id desc";
+
+        }
+
+        if(tipo == 'JI' && relacion == 'JRS'){
+          consulta = "select s.*, c.*, e.emp_mail, e.emp_puesto from [Vac.solicitud] as s, [Vac.control_vacaciones] as c, cin_emp as e where c.Clave = s.clave and e.emp_cve = s.clave and s.periodo = c.Periodo and s.status = 'Pend. X Jefe Inm.' and (s.clave = 300226 or s.clave = 300258 or s.clave = 300172 or s.clave = 300207 or s.clave = 300186 or s.clave = 300118 or s.clave = 300296) order by id desc";
 
         }
      
@@ -1652,6 +1822,62 @@ async function reporteConsultar(paramDepto, paramAnio, paramMes, paramCriterio, 
 
         }
 
+        if(tipoUsuario == 'JI' && relacion == 'AGTD'){
+
+            if(paramDepto != '' && paramAnio == '' && paramMes == '' && paramCriterio == ''){
+                consulta = 'select a.*, s.* from [Vac.control_vacaciones] as a, [Vac.solicitud] as s where a.Clave = s.clave and a.Periodo = s.periodo and a.Departamento = @depto and (s.clave = 300050 or s.clave = 300034 or s.clave = 300175 or s.clave = 300300 or s.clave = 300233 or s.clave = 300036 or s.clave = 300001 or s.clave = 300047 or s.clave = 300025) order by id desc';
+            }
+            if(paramDepto == '' && paramAnio != '' && paramMes == '' && paramCriterio == ''){
+                consulta = "select a.*, s.* from [Vac.control_vacaciones] as a, [Vac.solicitud] as s where a.Clave = s.clave and a.Periodo = s.periodo and s.fecha_solicitud like @anio and s.reldep = @relacion order by id desc";
+            }
+            if(paramDepto == '' && paramAnio == '' && paramMes != '' && paramCriterio == ''){
+                consulta = "select a.*, s.* from [Vac.control_vacaciones] as a, [Vac.solicitud] as s where a.Clave = s.clave and a.Periodo = s.periodo and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes and s.reldep = @relacion order by id desc";
+            }
+            if(paramDepto == '' && paramAnio == '' && paramMes == '' && paramCriterio != ''){
+                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and s.reldep = @relacion order by id desc";
+            }
+
+            if(paramDepto != '' && paramAnio != '' && paramMes == '' && paramCriterio == ''){
+                consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = s.clave and u.Periodo = s.periodo and u.Departamento = @depto and s.fecha_solicitud like @anio order by id desc';
+            }
+            if(paramDepto != '' && paramAnio != '' && paramMes != '' && paramCriterio == ''){
+                consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = s.clave and u.Periodo = s.periodo and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio order by id desc';
+            }
+            if(paramDepto == '' && paramAnio != '' && paramMes != '' && paramCriterio == ''){
+                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = s.clave and u.Periodo = s.periodo and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio and s.reldep = @relacion order by id desc";
+            }
+            if(paramDepto != '' && paramAnio == '' && paramMes != '' && paramCriterio == ''){
+                consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = s.clave and u.Periodo = s.periodo and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes order by id desc';
+            }
+
+            if(paramDepto != '' && paramAnio == '' && paramMes == '' && paramCriterio != ''){
+                consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and u.Departamento = @depto order by id desc';
+            }
+            if(paramDepto == '' && paramAnio != '' && paramMes == '' && paramCriterio != ''){
+                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and s.fecha_solicitud like @anio and s.reldep = @relacion order by id desc";
+            }
+            if(paramDepto == '' && paramAnio == '' && paramMes != '' && paramCriterio != ''){
+                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and s.fecha_solicitud like @mes and s.fecha_solicitud like @anioMes and s.reldep = @relacion order by id desc";
+            }
+            if(paramDepto != '' && paramAnio != '' && paramMes != '' && paramCriterio != ''){
+                consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and u.Departamento = @depto and s.fecha_solicitud like @mes and s.fecha_solicitud like @anio order by id desc';
+            }
+
+            if(paramDepto != '' && paramAnio == '' && paramMes != '' && paramCriterio != ''){
+                consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and u.Departamento = @depto and s.fecha_solicitud like @mes order by id desc';
+            }
+
+            if(paramDepto != '' && paramAnio != '' && paramMes == '' && paramCriterio != ''){
+                consulta = 'select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and u.Departamento = @depto and s.fecha_solicitud like @anio order by id desc';
+            }
+            if(paramDepto == '' && paramAnio != '' && paramMes != '' && paramCriterio != ''){
+                consulta = "select u.*, s.* from [Vac.control_vacaciones] as u, [Vac.solicitud] as s where u.Clave = @criterio and s.clave = @criterio and u.Periodo = s.periodo and s.fecha_solicitud like @mes and s.reldep = @relacion and s.fecha_solicitud like @anio order by id desc";
+            }
+
+
+        }
+
+
         // if(tipoUsuario == 'G'){
 
         //     if(paramDepto != '' && paramAnio == '' && paramMes == '' && paramCriterio == ''){
@@ -1775,10 +2001,12 @@ async function consultarColAsociados(clave, tipo, tipo_dep, departamento) {
         }
         // ****************** CONSULTA (ING.NVO.PROYECTOS REFRACTARIOS)
         if(tipo == 'S' && tipo_dep == 'FRV' && clave == '200022'){
-            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'FRV' and e.Descripcion = 'ING.NVO.PROYECTOS REFRACTARIOS'"
+            // consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'FRV' and e.Descripcion = 'ING.NVO.PROYECTOS REFRACTARIOS'"
+            // consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'FRV' and (c.Clave = 200022 or c.Clave = 200060 or c.Clave = 200062 or c.Clave = 200076 or c.Clave = 200148 or c.Clave = 200157 or c.Clave = 200216 or c.Clave = 200221)"
+            consulta = "SELECT e.*, c.* FROM cin_emp AS e INNER JOIN [Vac.control_vacaciones] AS c ON e.emp_cve = c.Clave WHERE e.emp_tipo IN ('C', 'S') AND e.emp_estatus != 'Baja' AND e.emp_reldep = 'FRV' AND c.Clave IN (200022, 200060, 200062, 200076, 200148, 200157, 200216, 200221);"
         }
         // ****************** CONSULTA (MANTENIMIENTO)
-        if(tipo == 'S' && tipo_dep == 'FRV' && (clave == '200178' || clave == '200022' || clave == '200038' || clave == '200083' || clave == '200213' || clave == '200254')){
+        if(tipo == 'S' && tipo_dep == 'FRV' && (clave == '200178' || clave == '200038' || clave == '200083' || clave == '200213' || clave == '200254')){
             consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'FRV' and e.Descripcion like 'MANTENIMIENTO%'"
         }
         // ****************** CONSULTA (REFRACTARIOS, ESPECIALIDADES REFRACTARIAS)
@@ -1787,17 +2015,17 @@ async function consultarColAsociados(clave, tipo, tipo_dep, departamento) {
         }
         // ****************** CONSULTA (CONTROL DE CALIDAD)
         if(tipo == 'S' && tipo_dep == 'SCMG' && clave == '300043'){
-            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'SCMG' and e.Descripcion = 'CONTROL DE CALIDAD'"
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (((e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and (e.emp_reldep = 'SCMG') and (e.Descripcion = 'CONTROL DE CALIDAD')) or (e.emp_tipo = 'JI' and e.emp_reldep = 'KAR'))"
         }
 
         // ****************** CONSULTA (EMBARQUES Y EMPAQUES)
-        if(tipo == 'S' && tipo_dep == 'GLR' && clave == '0200267'){
-            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'GLR' and e.Descripcion = 'EMBARQUES Y EMPAQUES'"
+        if(tipo == 'S' && tipo_dep == 'GLR' && clave == '200267'){
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S' or e.emp_tipo = 'JI') and e.emp_estatus != 'Baja' and (e.emp_reldep = 'GLR' or e.emp_reldep = 'BHTC') and e.Descripcion = 'EMBARQUES Y EMPAQUES'"
         }
 
         // ****************** CONSULTA (ALMACEN)
         if(tipo == 'S' && tipo_dep == 'GLR' && clave == '300175'){
-            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'GLR' and (e.Descripcion = 'ALMACEN' or e.Descripcion = 'CONTROL DE PRODUCCION')"
+            consulta = "select e.*, c.* from cin_emp as e, [Vac.control_vacaciones] as c where e.emp_cve = c.Clave and (((e.emp_tipo = 'C' or e.emp_tipo = 'S') and e.emp_estatus != 'Baja' and e.emp_reldep = 'GLR' and (e.Descripcion = 'ALMACEN' or e.Descripcion = 'CONTROL DE PRODUCCION') and e.emp_cve != 300274) or (e.emp_tipo = 'JI' and e.emp_cve = 300175))";
         }
 
         if(tipo == 'RIA'){
@@ -1842,7 +2070,7 @@ async function consultarHistorial(clave) {
         const request = new sql.Request();
         request.input('clave', sql.Int, clave);
 
-        var consulta = "select * from [Vac.solicitud] where clave = @clave and (status = 'Completado' or status = 'Rechazado')";
+        var consulta = "select * from [Vac.solicitud] where clave = @clave";
         
         // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
         const result = await request.query(consulta);
@@ -1881,7 +2109,7 @@ async function consultarHistorialColaboradores(clave) {
         const request = new sql.Request();
         request.input('clave', sql.Int, clave);
 
-        var consulta = "select * from [Vac.solicitud] where genera = @clave and (status = 'Completado' or status = 'Rechazado')";
+        var consulta = "select * from [Vac.solicitud] where genera = @clave";
         
         // Ejecutar una consulta (ejemplo: seleccionar todos los colaboradores)
         const result = await request.query(consulta);
@@ -2048,7 +2276,7 @@ async function insertarSolicitudMasiva(paramUno, paramDos, paramTres, paramCuatr
         request.input('date', sql.NVarChar, formatoEnEspanol);
         request.input('periodo', sql.NVarChar, paramDiesisiete);
 
-        const result = await request.query("INSERT INTO [Vac.solicitud] (clave, nombre, departamento, fecha_solicitud, tipo_solicitud, cuantos_dias, fecha_apartir, fecha_hasta, con_sueldo, sin_sueldo, sindicalizado, no_sindicalizado, motivo, firma_interesado, firma_jefe_in, firma_gerente, status, periodo, genera, reldep) VALUES (@clave, @nombre, @dep, @fecha, @tipo_sol, @dias, @fechaA, @fechaH, @permiso1, @permiso2, @permiso3, @permiso4, @motivo, @date, @date, @date, 'Completado', @periodo, @clave, @reldep)");
+        const result = await request.query("INSERT INTO [Vac.solicitud] (clave, nombre, departamento, fecha_solicitud, tipo_solicitud, cuantos_dias, fecha_apartir, fecha_hasta, con_sueldo, sin_sueldo, sindicalizado, no_sindicalizado, motivo, firma_interesado, firma_jefe_in, firma_gerente, status, periodo, genera, reldep) VALUES (@clave, @nombre, @dep, @fecha, @tipo_sol, @dias, @fechaA, @fechaH, @permiso1, @permiso2, @permiso3, @permiso4, @motivo, @date, @date, @date, 'Aceptado', @periodo, @clave, @reldep)");
         // const resultUpdate = await request.query("UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Pendiente' WHERE Clave = @clave");
         // const resultUpdateColaborador = await request.query("UPDATE colaboradores_julio_2025 SET Estatus_Solicitud = 'Disponible', Dias_disponibles = @dias_d, Dias_ocupados = @dias_o WHERE Clave = @clave");
         const resultUpdateColaborador = await request.query("UPDATE cin_emp SET emp_estsol = 'Disponible' WHERE emp_cve = @clave");
@@ -2174,7 +2402,7 @@ async function updateJefeInmediatoTodas(paramUno, paramDos, paramTres, paramCuat
         // console.log('La función se ejecutó el:' + formatoEnEspanol);
         request.input('date', sql.NVarChar, formatoEnEspanol);
 
-        const query = "UPDATE [Vac.solicitud] SET firma_jefe_in = @date, status = 'Jefe Inmediato' WHERE id = @id"
+        const query = "UPDATE [Vac.solicitud] SET firma_jefe_in = @date, status = 'Pend. X R.H.' WHERE id = @id"
         
         const result = await request.query(query);
         
@@ -2497,7 +2725,7 @@ async function firmarTodoRI(paramUno, paramDos, paramTres, paramSeis, paramSiete
 
         request.input('periodo', sql.NVarChar, paramSiete);
 
-        queryUpdateUno = "UPDATE [Vac.solicitud] SET status = 'Completado' WHERE id = @id";
+        queryUpdateUno = "UPDATE [Vac.solicitud] SET status = 'Aceptado' WHERE id = @id";
         queryUpdateDos = "UPDATE cin_emp SET emp_estsol = 'Disponible' WHERE emp_cve = @clave"; 
         queryUpdateTres = "UPDATE [Vac.control_vacaciones] SET Saldo = @dias_d, Vacaciones_tomadas = @dias_u WHERE Clave = @clave and Periodo = @periodo";
         // await enviarCorreoAceptado();
